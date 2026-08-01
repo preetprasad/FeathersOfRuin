@@ -4,6 +4,8 @@
 
 [Back to the event guide](../../README.md)
 
+> **Project status:** Research reference only. Team 4Freshers selected and implemented [Reid Sentinel](../reid-library/README.md) for the main submission. See the [complete project record](../reid-library/PROJECT_RECORD.md) or open the [public demo](https://reid-sentinel.vercel.app/).
+
 ## Mission
 
 Four orca pods collectively have enough water, food, and medicine, but the resources are poorly distributed. Transport is damaged, routes are disrupted, and failed deliveries have undermined trust.
@@ -140,10 +142,9 @@ matilda-bay/
 ## Decision record
 
 ```text
-Selected thread:
-Primary orca user:
-Decision improved:
-Fairness constraints:
-AI responsibility:
-Definition of done:
+Status: Not selected for the 4Freshers main implementation
+Selected thread: None
+Reason retained: Preserve Matilda Bay requirements, concepts, and product directions as a research reference
+Active team project: Reid Library — Two failures, no warning
+Implementation: Reid Sentinel
 ```

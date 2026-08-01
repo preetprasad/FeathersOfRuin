@@ -1,6 +1,6 @@
 # Reid Library
 
-> Region Three · Infrastructure monitoring · **Active starting location**
+> Region Three · Infrastructure monitoring · **Selected and implemented location**
 
 [Back to the event guide](../../README.md)
 
@@ -391,10 +391,11 @@ reid-library/
 ## Active decision record
 
 ```text
-Selected thread: Two failures, no warning (initial assumption)
+Selected thread: Two failures, no warning
 Primary user: Reid Library maintenance coordinator
-Decision improved: Whether conditions require investigation, preparation, or evacuation
+Decision improved: Whether evidence requires investigation, preparation, notification, or continued monitoring
 Core evidence: Water decline, vibration, sound, airflow efficiency, and temperature lag
 AI responsibility: Convert validated evidence into a concise incident briefing and action checklist
-Definition of done: A user can identify an approaching failure, inspect why it was flagged, and choose a response
+Definition of done: A coordinator can identify an approaching failure, inspect the method and evidence, obtain a bounded brief, and record a reversible response
+Status: Implemented, tested, documented, pushed, and deployed
 ```

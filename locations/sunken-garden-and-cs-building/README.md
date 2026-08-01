@@ -4,6 +4,8 @@
 
 [Back to the event guide](../../README.md)
 
+> **Project status:** Research reference only. Team 4Freshers selected and implemented [Reid Sentinel](../reid-library/README.md) for the main submission. See the [complete project record](../reid-library/PROJECT_RECORD.md) or open the [public demo](https://reid-sentinel.vercel.app/).
+
 ## Mission
 
 The Computer Science Building contains scavenged transmitters, damaged campus Wi-Fi hardware, and relay racks. The Sunken Garden is the robot decision hub. The network carries warnings, safe routes, emergency requests, and supply locations, but peacocks can imitate legitimate broadcasters and interfere with signals.
@@ -137,10 +139,9 @@ sunken-garden-and-cs-building/
 ## Decision record
 
 ```text
-Selected thread:
-Primary robot user:
-Decision improved:
-Evidence required:
-AI responsibility:
-Definition of done:
+Status: Not selected for the 4Freshers main implementation
+Selected thread: None
+Reason retained: Preserve Sunken Garden and CS requirements, concepts, and product directions as a research reference
+Active team project: Reid Library — Two failures, no warning
+Implementation: Reid Sentinel
 ```

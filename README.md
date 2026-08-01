@@ -13,6 +13,20 @@
 | Dinh Khanh Duy Nguyen |
 | jeongyun chae |
 
+## Current project status
+
+| Item | Current state |
+|---|---|
+| Selected location | **Reid Library** |
+| Selected thread | **Two failures, no warning** |
+| Product | **Reid Sentinel** |
+| Delivery state | Implemented, tested, documented, pushed, and deployed |
+| Automated checks | 21 passing tests plus lint and production build |
+| Public demo | [reid-sentinel.vercel.app](https://reid-sentinel.vercel.app/) |
+| Complete project history | [Decisions, pivots, risks, takeaways, and action plan](locations/reid-library/PROJECT_RECORD.md) |
+
+The Matilda Bay and Sunken Garden workspaces remain research references. They are not active implementations and should not be presented as additional main-project submissions.
+
 ## Quick facts
 
 | Item | Details |
@@ -1259,16 +1273,16 @@ Adjust these blocks when the organisers announce the actual submission deadline 
 
 # Demo checklist
 
-- [ ] Name the selected region and one selected thread.
-- [ ] Explain the survivor's decision in one sentence.
-- [ ] Show the supplied data being used.
-- [ ] Show one chart, table, or trend that supports the decision.
-- [ ] Demonstrate exactly what the AI does.
-- [ ] Expose supporting evidence and uncertainty.
-- [ ] Let the user confirm or modify the recommended action.
-- [ ] Demonstrate an outcome, not just a collection of screens.
-- [ ] Prepare a fallback if the live model or network fails.
-- [ ] State limitations honestly.
+- [x] Name the selected region and one selected thread: Reid Library · Two failures, no warning.
+- [x] Explain the survivor's decision: whether evidence requires investigation, preparation, notification, or continued monitoring.
+- [x] Show all 500 supplied sensor records and the recovered Cloudy notes being used.
+- [x] Show incident signals, calculated timelines, threshold sensitivity, and the averaged failure signature.
+- [x] Demonstrate the structured AI incident brief and its bounded evidence contract.
+- [x] Expose exact signal citations, uncertainty, provider status, and ground-truth boundaries.
+- [x] Let the coordinator choose, explain, resolve, and export the response decision.
+- [x] Demonstrate the complete warning-to-human-action workflow.
+- [x] Provide Ollama, Claude, optional Gateway, and deterministic fallback paths.
+- [x] State historical-data, threshold-transfer, local-model, and device-local audit limitations honestly.
 
 # Questions to confirm with organisers
 
@@ -1291,20 +1305,20 @@ Record answers announced during the opening briefing here so the whole team work
 
 # Team decision log
 
-Fill this out immediately after choosing a challenge.
-
 ```text
-Region:
-Selected thread:
-Primary survivor/user:
-Decision our product improves:
-Data files/columns needed:
-Core calculation or analytical method:
-AI task:
-Main interface:
-Definition of done:
-Demo owner:
+Region: Reid Library
+Selected thread: Two failures, no warning
+Primary survivor/user: Reid Library maintenance coordinator
+Decision our product improves: Whether current evidence requires investigation, preparation, notification, or continued monitoring
+Data files/columns needed: reid_library_sensor_data.csv; cloudys_logs.md; timestamp, power, airflow, water pressure, water flow, temperature, vibration, sound, status, and sensor source
+Core calculation or analytical method: Source normalisation, healthy airflow baseline, three-hour water change, airflow residual, cross-signal corroboration, episode discovery, backtesting, sensitivity analysis, and averaged pre-failure signature
+AI task: Convert only validated incident evidence into a schema-constrained, cited, uncertainty-aware action brief
+Main interface: Reid Sentinel early-warning evidence console with incident archive, signal charts, method visual, timelines, detector explanations, AI brief, and operator audit
+Definition of done: A coordinator can see an approaching failure, understand the evidence and method, obtain a safe brief, and record a reversible response
+Demo owner: To be assigned by Team 4Freshers before judging
 ```
+
+The full rationale and delivery history is maintained in the [Reid Sentinel project record](locations/reid-library/PROJECT_RECORD.md).
 
 # Final principle
 
