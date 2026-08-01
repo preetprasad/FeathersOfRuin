@@ -160,6 +160,24 @@ The first milestone should:
 7. Show which signals triggered an alert.
 8. Add an LLM briefing only after the evidence object is reliable.
 
+## Reid Sentinel implementation status
+
+The first milestone is implemented as the repository's main web application.
+
+Current capabilities:
+
+- Loads all 500 event records from the checked-in CSV
+- Normalises the truncated `barry_j_` sensor identity
+- Provides historical playback for two failures and two ventilation warnings
+- Switches between water, ventilation, and shelter signal views
+- Calculates the healthy power-to-airflow relationship and corrects the known Barry J airflow offset
+- Surfaces water decline, vibration, listener observations, missing values, and temperature consequence
+- Keeps `system_status` as an evaluation ribbon rather than using it as detector input
+- Produces a deterministic incident briefing fallback from validated evidence
+- Documents the contract for the future LLM briefing step
+
+The next implementation phase is to extract the transparent detection rules into tested analysis modules, evaluate their lead time and false alarms across all 500 rows, and connect the validated evidence object to a live LLM call.
+
 ## Implementation warning
 
 Do not claim correlation proves a future failure. Distinguish observed anomalies, repeated historical patterns, and predictions. Avoid using `system_status` directly as an input feature; it is the supplied ground truth for evaluating the detection workflow.
