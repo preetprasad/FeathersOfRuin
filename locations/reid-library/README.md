@@ -178,6 +178,7 @@ Current capabilities:
 - Automatically discovers two failures and two ventilation warnings instead of relying on hard-coded incident windows
 - Switches between water, ventilation, and shelter signal views
 - Changes each signal view's heading, explanation, and four summary measures together so the selected chart is never paired with unrelated water statistics
+- Contains wide charts and incident cards inside their own horizontal scrollers on narrow screens instead of expanding the complete dashboard, with 44-pixel mobile control targets for touch use
 - Calculates the healthy power-to-airflow relationship and corrects the known Barry J airflow offset
 - Runs the salvaged Barry J source through an explicit trust gate covering identity, coverage, cadence, completeness, physical ranges, frozen channels, and post-calibration agreement
 - Lets judges stress that same production trust function with missing, duplicated, impossible, frozen, and unstable-drift scenarios without changing the historical archive

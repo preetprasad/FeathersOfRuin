@@ -1283,6 +1283,7 @@ Adjust these blocks when the organisers announce the actual submission deadline 
 - [x] Let the coordinator choose, explain, resolve, and export the response decision.
 - [x] Demonstrate the complete warning-to-human-action workflow.
 - [x] Provide Ollama, Claude, optional Gateway, and deterministic fallback paths.
+- [x] Keep wide incident and chart content contained on narrow screens with touch-sized mobile controls.
 - [x] State historical-data, threshold-transfer, local-model, and device-local audit limitations honestly.
 
 # Questions to confirm with organisers

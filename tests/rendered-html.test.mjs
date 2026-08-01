@@ -44,11 +44,12 @@ test("server-renders the Reid Sentinel product", async () => {
 });
 
 test("keeps the evidence source and starter preview out of the finished product", async () => {
-  const [page, dashboard, briefingRoute, packageJson] = await Promise.all([
+  const [page, dashboard, briefingRoute, packageJson, styles] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/reid-dashboard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/briefing/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /<ReidDashboard \/>/);
@@ -94,6 +95,9 @@ test("keeps the evidence source and starter preview out of the finished product"
   assert.match(dashboard, /Shelter impact/);
   assert.match(dashboard, /Worst efficiency gap/);
   assert.match(dashboard, /Listener events/);
+  assert.match(styles, /\.workbench\s*\{[^}]*min-width:\s*0/s);
+  assert.match(styles, /@media \(max-width: 1050px\)[\s\S]*?\.workbench\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+  assert.match(styles, /\.metric-tabs button,[\s\S]*?min-height:\s*44px/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton|drizzle/);
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });

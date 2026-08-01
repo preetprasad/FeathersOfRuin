@@ -89,6 +89,7 @@ This document is the durable record of the decisions, pivots, rationale, action 
 | Use Sites for the configured project deployment | The repository includes a Sites project binding | A versioned Sites deployment is maintained |
 | Add Vercel as the public judge path | The Sites URL led visitors through ChatGPT authentication, which creates demo friction | `https://reid-sentinel.vercel.app/` is the recommended presentation URL |
 | Keep both deployment paths current | Sites is the configured workspace host; Vercel is the frictionless public demo | Each completed improvement has been published to both |
+| Constrain responsive grid tracks and enlarge mobile controls | The internal audit found the 390-pixel viewport expanding to 770 pixels and several touch controls below the recommended target size | Narrow screens keep overflow inside the incident and chart surfaces while primary controls remain comfortably tappable |
 | Add provider health reporting | A presenter needs to know whether the live model path is ready before pressing the button | The header reports Ollama, Claude standby, and guaranteed fallback readiness |
 
 ### Human control and auditability

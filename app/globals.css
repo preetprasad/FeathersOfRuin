@@ -711,10 +711,12 @@ button {
   display: grid;
   grid-template-columns: 290px minmax(0, 1fr);
   gap: 20px;
+  min-width: 0;
 }
 
 .episode-rail,
 .panel {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgb(28 40 36 / 0.72);
@@ -802,6 +804,7 @@ button {
 .main-stack {
   display: grid;
   gap: 20px;
+  min-width: 0;
 }
 
 .panel {
@@ -2595,7 +2598,7 @@ button {
 
 @media (max-width: 1050px) {
   .workbench {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .episode-rail {
@@ -2605,7 +2608,9 @@ button {
   .episode-list {
     display: grid;
     grid-template-columns: repeat(4, minmax(180px, 1fr));
+    min-width: 0;
     overflow-x: auto;
+    overscroll-behavior-inline: contain;
   }
 
   .decision-grid {
@@ -2694,6 +2699,20 @@ button {
 
   .panel-heading {
     flex-direction: column;
+  }
+
+  .metric-tabs button,
+  .trust-scenarios button,
+  .generate-button,
+  .decision-actions button,
+  .record-audit-button,
+  .audit-summary button,
+  .audit-form input,
+  .resolution-form input,
+  .resolution-form button,
+  .intro-skip,
+  .intro-enter {
+    min-height: 44px;
   }
 
   .kpi-grid,
