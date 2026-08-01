@@ -170,10 +170,14 @@ The complete judged workflow is implemented as the repository's main web applica
 
 **Interactive presentation:** [reid-sentinel.vercel.app/presentation](https://reid-sentinel.vercel.app/presentation)
 
+**Private team admin:** [reid-sentinel.vercel.app/admin](https://reid-sentinel.vercel.app/admin)
+
 Current capabilities:
 
 - Provides an 11-section, keyboard-controlled presentation mode inside the same application, with interactive residual, corroboration, trust-gate, and threshold-profile demonstrations driven by the production analysis functions
+- Opens presentation mode with a skippable, reduced-motion-aware story transition that moves from the campus and feather strike into the evidence narrative
 - Links every presented data-science concept to stable, exact lines in the checked-in implementation and transitions directly into the live evidence console
+- Separates private team operations into a signed-session `/admin` route with new-tab launch controls for presentation and landing surfaces, a device-local contribution ledger, readiness summary, presenter runbook, and sign-out control
 - Opens with a skippable cinematic campus sequence that zooms from the UWA field map into Reid Library, visualises the feather strike and infrastructure failure, introduces Cloudy, and hands off to the evidence console
 - Presents the complete five-stage analysis method beside a calculated 24-hour signature averaged across both recorded failures
 - Replays both recorded water failures side by side, exposing the calculated listener-watch, corroborated-warning, critical, and failure timestamps
@@ -232,6 +236,8 @@ The dashboard brings the method and the result together in one judge-facing comp
 
 Presentation controls support the left and right arrow keys, up and down arrows, Page Up, Page Down, Space, Home, End, the on-screen controls, and direct slide navigation. Each section has a stable hash link. On mobile, the presentation becomes a natural vertical document instead of forcing slide-sized content into a small viewport.
 
+The route begins with its own short story sequence—campus, Reid marker, feather impact, system stakes, and evidence-story title—so a direct presentation link still establishes the narrative. It can be skipped, replayed from the presentation header, or bypassed automatically when reduced motion is requested.
+
 The interactive sections are not separately maintained mock calculations:
 
 - the failure signature calls `buildFailureSignature` over the checked-in dataset;
@@ -239,6 +245,21 @@ The interactive sections are not separately maintained mock calculations:
 - the trust scenarios call `applySensorTrustScenario` and `analyzeSensorTrust`;
 - opening and outcome metrics call the same episode and backtest functions as the dashboard; and
 - residual and corroboration labs expose the deployed balanced boundaries beside stable links to their exact source lines.
+
+### Private 4Freshers admin boundary
+
+`/admin` is server-gated rather than merely hidden from navigation. A successful access-code check creates an eight-hour HMAC-signed session in an `HttpOnly`, `SameSite=Strict`, production-secure cookie. The admin page verifies that signature on every request; private contribution and runbook content is not server-rendered for unauthenticated visitors. Failed verification uses a generic response and a fixed delay, while malformed or oversized requests are rejected before credential comparison.
+
+The two server-only values are documented in `.env.example`:
+
+```text
+ADMIN_ACCESS_CODE=
+ADMIN_SESSION_SECRET=
+```
+
+Use a unique access code of at least 16 characters and a random session secret of at least 32 characters. Production values belong only in Vercel and Sites secret configuration and the ignored local environment file—never in Git, screenshots, contribution notes, or presentation output.
+
+The contribution ledger persists only in the authenticated operator's browser. This is appropriate for the hackathon handoff, but it is explicitly not a shared production database. Unknown teammate contributions remain marked **needs confirmation** so the system does not invent attribution. Confirmed notes can be updated in the admin interface and saved on that device.
 
 The five displayed stages are:
 
@@ -418,7 +439,7 @@ npm test
 npx next build
 ```
 
-The 34-test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, metric display rounding, server rendering of both the dashboard and interactive presentation, audit evidence and AI provenance capture, immutable first resolution, malformed and oversized local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. Trust-gate edge cases include absent sources, missing channels, timestamp gaps and duplicates, impossible readings, frozen sensors, and unstable calibration drift; the interactive stress controls are verified against the same fail-closed analysis used by the baseline gate. Detector edge cases include sound-only reports and uncorroborated pressure-and-flow trends.
+The 38-test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, metric display rounding, server rendering of the dashboard and interactive presentation, unauthenticated admin-content isolation, access-code comparison, signed-session lifetime and tamper rejection, audit evidence and AI provenance capture, immutable first resolution, malformed and oversized local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. Trust-gate edge cases include absent sources, missing channels, timestamp gaps and duplicates, impossible readings, frozen sensors, and unstable calibration drift; the interactive stress controls are verified against the same fail-closed analysis used by the baseline gate. Detector edge cases include sound-only reports and uncorroborated pressure-and-flow trends.
 
 ## Implementation warning
 

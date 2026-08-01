@@ -61,6 +61,9 @@ This document is the durable record of the decisions, pivots, rationale, action 
 | Keep the balanced profile active | Conservative delays confirmation; sensitive adds alert load without lead-time benefit | Balanced provides 21–23 hours confirmed lead, 96.21% confirmed unsafe-hour coverage, and zero false confirmed alert-hours |
 | Add a presentation-ready method component | A side-quest hint said to explain the analysis method and visualise its result | The interface shows a five-stage pipeline and a calculated mean 24-hour signature across both failures |
 | Add a dedicated interactive presentation route | A live explanation can connect data-science concepts, calculated outputs, and exact implementation more effectively than a static deck | `/presentation` provides 11 guided sections, four interactive concept surfaces, keyboard controls, code links, and a direct handoff to the evidence console |
+| Separate public, presentation, and team operations | Landing, judging narrative, and private coordination serve different users and should not compete inside one interface | `/` remains the evidence console, `/presentation` explains the solution, and `/admin` handles team operations |
+| Protect admin with a signed shared-secret session | The public Vercel deployment cannot rely on Sites workspace identity, and private team content should not be secured only by obscurity | A server-only access code creates an eight-hour HMAC-signed HttpOnly cookie; every admin render verifies it server-side |
+| Keep contribution attribution honest and editable | Only Preet's repository delivery is evidenced locally; inventing individual teammate work would undermine the project record | Unknown entries begin as needs-confirmation and can be saved device-locally by the authenticated team |
 | Integrate the salvaged-sensor thread as a trust gate, not a second main scope | The Barry J source already contributes evidence to the selected early-warning workflow; its quality should be justified before use | Seven calculated gates now produce a provisional admit-with-calibration or reject decision |
 | Make the sensor trust gate fail closed at row-level edges | Safety evidence cannot tolerate a single missing interval, impossible value, duplicate timestamp, or frozen run being hidden by a high aggregate percentage | Coverage, cadence, completeness, and range must be exact; calibration requires at least 24 stable rows and corrected residual MAE no greater than `0.05 m³/s` |
 | Keep the selected failure-warning thread visually dominant | The live hackathon page says to choose one thread, while the salvaged sensor is a separate Reid thread | A cross-failure replay now proves the main warning result; the interactive sensor stress test is explicitly framed as an input-quality support layer |
@@ -115,6 +118,7 @@ This document is the durable record of the decisions, pivots, rationale, action 
 | Respect reduced-motion preferences | Narrative polish cannot override accessibility | Reduced-motion users bypass the animation automatically |
 | Add a concise analysis-method narrative | Team members found a side-quest hint about explaining the method and visualising results | The README contains presentation copy and the dashboard places method beside measured output |
 | Keep presentation mode inside Reid Sentinel | A separate presentation app would duplicate visual language, data logic, deployment, and maintenance | The guided route imports the same dataset and analysis functions as the operational dashboard |
+| Give presentation mode its own story transition | Judges may open `/presentation` directly and otherwise miss the narrative established by the landing animation | A shorter skippable campus-to-evidence sequence opens the presentation and respects reduced-motion settings |
 
 ## 4. Milestone chronology
 
@@ -247,7 +251,7 @@ These are retrospective results on the event dataset. They are not a production 
 - [ ] Start Ollama, the token-protected proxy, and ngrok; keep the Mac awake and connected to power.
 - [ ] Confirm the current tunnel URL matches the production `OLLAMA_REMOTE_URL` value.
 - [ ] Open `/api/briefing/health` and confirm Ollama is available and Claude is on standby.
-- [ ] Run the complete automated suite and verify all 34 tests pass.
+- [ ] Run the complete automated suite and verify all 38 tests pass.
 - [ ] Test the public Vercel URL in a private browser window with no existing session.
 - [ ] Generate one live briefing for a water incident and one for ventilation.
 - [ ] Replay both recorded failures, then show the Sensor Trust Gate baseline and at least two reject scenarios without presenting the salvaged sensor as a second selected thread.

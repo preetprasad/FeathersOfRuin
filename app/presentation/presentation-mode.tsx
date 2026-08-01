@@ -107,6 +107,29 @@ function CodeCard({ concept }: { concept: CodeKey }) {
   );
 }
 
+function PresentationStoryIntro({ onComplete }: { onComplete: () => void }) {
+  return (
+    <section aria-label="Presentation story opening" className="presentation-story-intro">
+      <button className="presentation-story-skip" onClick={onComplete} type="button">Skip story</button>
+      <div className="presentation-story-map" aria-hidden="true">
+        <div className="story-river" />
+        <div className="story-campus">
+          {Array.from({ length: 16 }, (_, index) => <i key={index} />)}
+          <span className="story-reid-marker"><b>RS</b>Reid Library<small>dragon shelter</small></span>
+        </div>
+        <div className="story-impact"><i /><i /><i /></div>
+      </div>
+      <div className="presentation-story-lines">
+        <p>The feathers fell.</p>
+        <p>Reid Library became a shelter.</p>
+        <p>Then the systems began to fail.</p>
+        <div><span>4Freshers presents</span><strong>THE EVIDENCE STORY</strong><small>How 500 readings became 21–23 hours to act</small></div>
+      </div>
+      <button className="presentation-story-enter" onClick={onComplete} type="button">Begin presentation</button>
+    </section>
+  );
+}
+
 function SignatureChart({ points }: { points: ReturnType<typeof buildFailureSignature>["points"] }) {
   const width = 760;
   const height = 310;
@@ -158,6 +181,7 @@ export function PresentationMode() {
   const [trustScenario, setTrustScenario] = useState<SensorTrustScenarioId>("baseline");
   const [profileId, setProfileId] = useState<DetectorProfileId>("balanced");
   const [codeConcept, setCodeConcept] = useState<CodeKey>("residual");
+  const [storyVisible, setStoryVisible] = useState(true);
 
   const expectedAirflow = 0.125 * power - 1.5;
   const residual = measuredAirflow - expectedAirflow;
@@ -181,6 +205,23 @@ export function PresentationMode() {
     const safeIndex = Math.max(0, Math.min(index, slides.length - 1));
     document.getElementById(slides[safeIndex].id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  useEffect(() => {
+    if (!storyVisible) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const reducedTimer = window.setTimeout(() => setStoryVisible(false), 0);
+      return () => window.clearTimeout(reducedTimer);
+    }
+    const finishTimer = window.setTimeout(() => setStoryVisible(false), 6_400);
+    const escapeStory = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setStoryVisible(false);
+    };
+    window.addEventListener("keydown", escapeStory);
+    return () => {
+      window.clearTimeout(finishTimer);
+      window.removeEventListener("keydown", escapeStory);
+    };
+  }, [storyVisible]);
 
   useEffect(() => {
     const requested = slides.findIndex((slide) => `#${slide.id}` === window.location.hash);
@@ -225,6 +266,7 @@ export function PresentationMode() {
 
   return (
     <div className="presentation-shell">
+      {storyVisible && <PresentationStoryIntro onComplete={() => setStoryVisible(false)} />}
       <header className="presentation-topbar">
         <a className="presentation-brand" href="#opening" onClick={(event) => { event.preventDefault(); goToSlide(0); }}>
           <span>RS</span><strong>REID SENTINEL</strong><small>/ presentation mode</small>
@@ -234,6 +276,7 @@ export function PresentationMode() {
         </div>
         <nav aria-label="Presentation actions">
           <span>{String(activeSlide + 1).padStart(2, "0")} / {slides.length}</span>
+          <button onClick={() => setStoryVisible(true)} type="button">Replay story</button>
           <Link href="/">Open evidence console</Link>
         </nav>
       </header>

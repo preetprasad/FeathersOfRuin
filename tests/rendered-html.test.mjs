@@ -55,6 +55,19 @@ test("server-renders the interactive presentation from real analysis results", a
   assert.match(html, /21–23 hours to act/);
   assert.match(html, /Open exact lines/);
   assert.match(html, /Juan Enrique Somadinata/);
+  assert.match(html, /The feathers fell/);
+  assert.match(html, /Begin presentation/);
+});
+
+test("keeps private admin content behind the 4Freshers verification gate", async () => {
+  const response = await render("/admin");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /verify if your dragon paws belong to/);
+  assert.match(html, /4Freshers/);
+  assert.doesNotMatch(html, /4Freshers contributions/);
+  assert.doesNotMatch(html, /Judge-path readiness/);
 });
 
 test("keeps the evidence source and starter preview out of the finished product", async () => {
