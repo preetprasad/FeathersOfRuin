@@ -77,6 +77,342 @@ This is a suggested design pattern, not an official judging rubric.
 
 ---
 
+# Concepts required by region
+
+This section is a consolidated technical study guide. The event officially requires a web interface, a data component, and a meaningful LLM feature; it does **not** require every technique listed below. These are the concepts that may be needed to understand and implement the different problem threads effectively.
+
+## Concepts shared by every region
+
+### Product and problem-solving concepts
+
+- User-centred problem definition
+- Selecting one user, one decision, and one problem thread
+- Converting a fictional crisis into a concrete workflow
+- Designing a usable web interface
+- Presenting evidence before recommendations
+- Human-in-the-loop decision-making
+- Manual approval and override controls
+- Audit trails and decision history
+- Handling uncertainty and incomplete data
+- Honest communication of limitations
+- Designing a short, outcome-focused demonstration
+
+### Data concepts
+
+- Loading and validating supplied datasets
+- Understanding column types and units
+- Missing-value detection and handling
+- Duplicate-record detection
+- Filtering and sorting
+- Aggregation and grouping
+- Summary statistics
+- Data provenance
+- Choosing decision-relevant visualisations
+- Distinguishing correlation from causation
+- Preventing generated text from overriding calculated facts
+
+### AI and LLM concepts
+
+- Prompt design
+- Supplying relevant context
+- Structured model outputs
+- Schema validation
+- Evidence-grounded generation
+- Confidence and uncertainty communication
+- Hallucination risk
+- Human review of model recommendations
+- Model-call error handling and fallbacks
+- Separating deterministic calculations from generated explanations
+- Treating dataset text as untrusted input
+- Evaluating whether the AI feature changes or improves the workflow
+
+### Web application concepts
+
+- Responsive interface design
+- Accessible labels, tables, and charts
+- Clear loading, empty, and error states
+- File or dataset ingestion
+- State management
+- Form validation
+- API integration
+- Secure handling of model credentials
+- Reproducible demo data
+- Graceful behaviour when the network or model is unavailable
+
+## Region 1 concept inventory — Sunken Garden & CS Building
+
+### Domain concepts
+
+- Information credibility
+- Misinformation and disinformation
+- Sender identity and impersonation
+- Source reliability and reputation
+- Message freshness and stale information
+- Evidence corroboration
+- Conflicting reports
+- Communication-network resilience
+- Human-in-the-loop verification
+- Risk and uncertainty
+- Emergency-message prioritisation
+- Trust recovery
+- Silence and missing-signal detection
+- The cost of false positives and false negatives
+
+### Data concepts
+
+- Broadcast-log analysis
+- Sender-history analysis
+- Reliability scores
+- Timestamp comparison
+- Time-window matching
+- Location consistency
+- Message-type classification
+- Communication-frequency baselines
+- Duplicate and similar-message detection
+- Historical failure-rate analysis
+- Contradiction detection
+- Cross-source evidence retrieval
+- Message provenance and stable message IDs
+- Reliability as a time-varying value rather than a permanent label
+
+### AI and NLP concepts
+
+- Natural-language classification
+- Claim extraction
+- Entity and location extraction
+- Message summarisation
+- Semantic similarity
+- Contradiction detection
+- Evidence-grounded reasoning
+- Structured LLM output
+- Hypothesis generation
+- AI-assisted moderation
+- Retrieval-augmented generation
+- Confidence and uncertainty explanation
+- Prompt-injection awareness when analysing untrusted messages
+
+### Product concepts
+
+- Message-verification dashboard
+- Investigation timeline
+- Moderation and escalation queue
+- Evidence-comparison interface
+- Approve, quarantine, reject, or escalate actions
+- Outpost-health monitoring
+- Explainable risk indicators
+- Manual overrides
+- Reviewer notes
+- Search and filtering by sender, location, time, and message type
+
+### Thread-specific concepts
+
+| Thread | Concepts to understand |
+|---|---|
+| The false all-clear | Fake-message detection, route-warning validation, corroboration, risk scoring, and consequences of acting on a false message |
+| Marv Mail | Identity cloning, damaged transmitters, stale reports, competing hypotheses, and reliability changes over time |
+| Marv | Network moderation, risk-based triage, degraded-system operation, and balancing dangerous messages against the cost of silence |
+| The Mini-Marvs | Evidence matching, semantic claim normalisation, human review, and verification-workflow automation |
+| The silent outposts | Missing-event detection, communication-cadence baselines, safe check-in protocols, and detecting hidden emergencies |
+
+### Region 1 implementation warning
+
+Do not build an unexplained “AI truth detector.” A model cannot establish truth merely from writing style. Use sender history, time, location, corroboration, and explicit evidence; show uncertainty and keep the survivor in control.
+
+## Region 2 concept inventory — Matilda Bay
+
+### Domain concepts
+
+- Resource scarcity and resource distribution
+- Supply, demand, consumption, and replenishment
+- Fairness versus equality
+- Equity and vulnerable populations
+- Allocation under uncertainty
+- Transport and capacity constraints
+- Route disruption
+- Mutual dependency between groups
+- Hoarding caused by distrust
+- Access barriers
+- Unexpressed or hidden need
+- Negotiation and council decision-making
+- Short-term relief versus long-term sustainability
+
+### Data concepts
+
+- Inventory analysis
+- Consumption-rate calculation
+- Days-of-supply or resource-runway calculation
+- Shortage forecasting
+- Surplus identification
+- Delivery-history analysis
+- Request-versus-allocation comparison
+- Population-adjusted need
+- Distance and accessibility analysis
+- Disruption rates
+- Historical inequity detection
+- Priority scoring
+- Scenario modelling
+- Time-series trends
+
+### Algorithmic and optimisation concepts
+
+- Constraint satisfaction
+- Resource-allocation optimisation
+- Multi-objective optimisation
+- Priority queues
+- Delivery scheduling
+- Route planning
+- Vehicle and cargo capacity
+- Minimum safety thresholds
+- Fairness constraints
+- Trade-off analysis
+- What-if simulation
+- Sensitivity analysis
+- Dynamic replanning when a route or vehicle becomes unavailable
+
+### AI concepts
+
+- Request classification
+- Urgency extraction
+- Council-record summarisation
+- Scenario explanation
+- Fairness explanation
+- Proposal generation
+- Negotiation assistance
+- Translating optimisation results into plain language
+- Structured recommendations
+- Evidence-linked council decision briefs
+
+### Product concepts
+
+- Resource-status dashboard
+- Allocation planner
+- Courier dispatch board
+- Scenario-comparison interface
+- Equity monitor
+- Shortage alerts
+- Delivery-priority queue
+- Council proposal generator
+- Manual schedule adjustment
+- Before-and-after resource projections
+- Explanation of who benefits and who carries risk
+
+### Thread-specific concepts
+
+| Thread | Concepts to understand |
+|---|---|
+| Orca Pod 1 | Water purification, food-for-water exchange, sustainable safety buffers, coercive pricing, and mutual dependence |
+| Orca Pod 2 | Medicine prioritisation, last-mile delivery, limited transport capacity, medical urgency, and delivery feasibility |
+| Orca Pod 3 | Food surplus, distrust-driven hoarding, convoy risk, staged commitments, and trust-aware sharing |
+| The courier network | Job scheduling, cargo prioritisation, vehicle capacity, route disruption, and dynamic replanning |
+| Orca Pod 4 | Structural inequity, unmet need without active requests, request abandonment, geographic disadvantage, and fairness audits |
+
+### Region 2 implementation warning
+
+Do not optimise only for the largest quantity moved or the shortest route. A mathematically efficient plan can reinforce inequity. Include minimum survival levels, urgency, delivery feasibility, previous exclusion, and the consequences for every pod.
+
+## Region 3 concept inventory — Reid Library
+
+### Domain concepts
+
+- Predictive maintenance
+- Preventive maintenance
+- Infrastructure reliability
+- System health and failure modes
+- Early-warning systems
+- Automated versus manual operation
+- Sensor trustworthiness
+- Maintenance-knowledge preservation
+- Human observations as evidence
+- Safety-versus-availability trade-offs
+- Critical-system dependencies
+- Alert fatigue and false alarms
+
+### Time-series and data concepts
+
+- Hourly time-series analysis
+- Datetime parsing and chronological ordering
+- Missing-value detection
+- Sensor baselines
+- Threshold detection
+- Rate-of-change analysis
+- Rolling averages and rolling variability
+- Trend and seasonality analysis
+- Outlier and anomaly detection
+- Multivariate relationships
+- Correlation and lagged correlation
+- Change-point detection
+- Pre-failure pattern analysis
+- Sensor drift
+- Frozen or repeated readings
+- Cross-sensor agreement
+- Data-quality and confidence scoring
+
+### Sensor concepts
+
+- Power monitoring
+- Airflow
+- Water pressure and water flow
+- Temperature
+- Vibration
+- Sound and acoustic monitoring
+- Sampling intervals
+- Calibration
+- Sensor fusion
+- Cross-sensor validation
+- Smart-sensor onboarding
+- Understanding how physical measurements should relate to one another
+
+### AI concepts
+
+- Maintenance-note extraction
+- Converting notes into structured hypotheses
+- Technical-log summarisation
+- Natural-language observation normalisation
+- Incident explanation
+- Alert explanation
+- Maintenance-recommendation generation
+- Evidence-grounded decision briefs
+- Structured LLM responses
+- Separating calculated facts from generated interpretation
+
+### Product concepts
+
+- Infrastructure-health dashboard
+- Sensor timeline
+- Anomaly and alert panel
+- Maintenance-note explorer
+- Human-observation logging
+- Failure-warning system
+- Scenario-comparison tool
+- Sensor-quality report
+- Alert acknowledgement
+- Recommended-action checklist
+- Historical incident review
+
+### Thread-specific concepts
+
+| Thread | Concepts to understand |
+|---|---|
+| Cloudy's notes | Knowledge extraction, hypothesis testing, text-to-sensor alignment, lagged warning patterns, and validating expert observations |
+| Two failures, no warning | Anomaly detection, multisensor warning signals, alert levels, warning lead time, and false-alarm management |
+| The listeners | Acoustic monitoring, observation logging, sound-description normalisation, and correlating human reports with sound and vibration |
+| The two leaders | Decision analysis, manual-versus-automated operation, safety and availability, scenario comparison, and partial shutdown strategies |
+| The salvaged sensor | Sensor integration, calibration, missing-data rates, sampling consistency, cross-sensor validation, and confidence scoring |
+
+### Region 3 implementation warning
+
+Do not claim that correlation proves an impending failure. Distinguish observed anomalies, historically repeated patterns, and genuine predictions. Show which sensor readings produced an alert and state how much warning confidence the available data supports.
+
+## Concept-based region selection
+
+| Choose this region when the team is strongest in… | Region |
+|---|---|
+| NLP, LLMs, misinformation analysis, evidence retrieval, and trust-oriented UX | Sunken Garden & CS Building |
+| Optimisation, logistics, fairness, resource planning, and decision-support systems | Matilda Bay |
+| Time-series analysis, anomaly detection, predictive maintenance, and sensor visualisation | Reid Library |
+
+---
+
 # Main challenge 1: Sunken Garden & CS Building
 
 ## Theme: Trust and misinformation
