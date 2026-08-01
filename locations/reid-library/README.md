@@ -168,7 +168,7 @@ The complete judged workflow is implemented as the repository's main web applica
 
 **Live public dashboard:** [reid-sentinel.vercel.app](https://reid-sentinel.vercel.app/)
 
-**Interactive presentation:** [reid-sentinel.vercel.app/presentation](https://reid-sentinel.vercel.app/presentation)
+**Protected interactive presentation:** [reid-sentinel.vercel.app/presentation](https://reid-sentinel.vercel.app/presentation) — unauthenticated visitors are redirected through `/admin`
 
 **Private team admin:** [reid-sentinel.vercel.app/admin](https://reid-sentinel.vercel.app/admin)
 
@@ -248,7 +248,7 @@ The interactive sections are not separately maintained mock calculations:
 
 ### Private 4Freshers admin boundary
 
-`/admin` is server-gated rather than merely hidden from navigation. A successful access-code check creates an eight-hour HMAC-signed session in an `HttpOnly`, `SameSite=Strict`, production-secure cookie. The admin page verifies that signature on every request; private contribution and runbook content is not server-rendered for unauthenticated visitors. Failed verification uses a generic response and a fixed delay, while malformed or oversized requests are rejected before credential comparison.
+`/admin` and `/presentation` are server-gated rather than merely hidden from navigation. A successful access-code check creates an eight-hour HMAC-signed session in an `HttpOnly`, `SameSite=Strict`, production-secure cookie. Both protected pages verify that signature on every request; private contribution, runbook, and presentation content is not server-rendered for unauthenticated visitors. A direct unauthenticated presentation request redirects to `/admin?returnTo=/presentation`, and successful verification returns the visitor to the presentation automatically. Failed verification uses a generic response and a fixed delay, while malformed or oversized requests are rejected before credential comparison.
 
 The two server-only values are documented in `.env.example`:
 
@@ -439,7 +439,7 @@ npm test
 npx next build
 ```
 
-The 38-test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, metric display rounding, server rendering of the dashboard and interactive presentation, unauthenticated admin-content isolation, access-code comparison, signed-session lifetime and tamper rejection, audit evidence and AI provenance capture, immutable first resolution, malformed and oversized local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. Trust-gate edge cases include absent sources, missing channels, timestamp gaps and duplicates, impossible readings, frozen sensors, and unstable calibration drift; the interactive stress controls are verified against the same fail-closed analysis used by the baseline gate. Detector edge cases include sound-only reports and uncorroborated pressure-and-flow trends.
+The 39-test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, metric display rounding, public landing-page rendering, authenticated presentation rendering, unauthenticated presentation redirection, unauthenticated admin-content isolation, access-code comparison, signed-session lifetime and tamper rejection, audit evidence and AI provenance capture, immutable first resolution, malformed and oversized local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. Trust-gate edge cases include absent sources, missing channels, timestamp gaps and duplicates, impossible readings, frozen sensors, and unstable calibration drift; the interactive stress controls are verified against the same fail-closed analysis used by the baseline gate. Detector edge cases include sound-only reports and uncorroborated pressure-and-flow trends.
 
 ## Implementation warning
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function AdminLogin({ configured }: { configured: boolean }) {
+export function AdminLogin({ configured, returnTo = "/admin" }: { configured: boolean; returnTo?: "/admin" | "/presentation" }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export function AdminLogin({ configured }: { configured: boolean }) {
       });
       const payload = await response.json() as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Verification failed.");
-      window.location.replace("/admin");
+      window.location.replace(returnTo);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Verification failed.");
     } finally {
@@ -36,7 +36,9 @@ export function AdminLogin({ configured }: { configured: boolean }) {
         <a className="admin-gate-brand" href="/"><span>RS</span><strong>REID SENTINEL</strong></a>
         <span className="admin-security-label">Restricted den · 4Freshers only</span>
         <h1>Wait—verify if your dragon paws belong to <em>4Freshers.</em></h1>
-        <p>The contribution ledger, demo runbook, deployment status, and team controls live beyond this gate.</p>
+        <p>{returnTo === "/presentation"
+          ? "The evidence presentation is reserved for the team. Verify once and the story will open automatically."
+          : "The contribution ledger, demo runbook, deployment status, and team controls live beyond this gate."}</p>
         {configured ? (
           <form onSubmit={submit}>
             <label htmlFor="admin-code">Team access code</label>

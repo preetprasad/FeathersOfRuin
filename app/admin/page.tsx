@@ -22,7 +22,9 @@ const runOfShow = [
   ["04:00", "Human control", "Record a reversible response and close on the recovered time to act."],
 ];
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ returnTo?: string | string[] }> }) {
+  const requestedReturnTo = (await searchParams).returnTo;
+  const returnTo = requestedReturnTo === "/presentation" ? "/presentation" as const : "/admin" as const;
   const cookieStore = await cookies();
   const configured = Boolean((process.env.ADMIN_ACCESS_CODE || "").length >= 16 && (process.env.ADMIN_SESSION_SECRET || "").length >= 32);
   const authenticated = configured && await verifyAdminSession(
@@ -30,7 +32,7 @@ export default async function AdminPage() {
     process.env.ADMIN_SESSION_SECRET,
   );
 
-  if (!authenticated) return <AdminLogin configured={configured} />;
+  if (!authenticated) return <AdminLogin configured={configured} returnTo={returnTo} />;
 
   return (
     <main className="admin-shell">
@@ -54,7 +56,7 @@ export default async function AdminPage() {
         <section className="admin-overview-grid">
           <article className="admin-panel admin-readiness">
             <span>Current build</span><h2>Judge-path readiness</h2>
-            <div><strong>34/34</strong><p>automated checks</p></div>
+            <div><strong>39/39</strong><p>automated checks</p></div>
             <div><strong>2/2</strong><p>failures recovered</p></div>
             <div><strong>21–23h</strong><p>confirmed lead</p></div>
             <ul><li>Vercel public route</li><li>Sites private route</li><li>Local → hosted → deterministic AI</li><li>Presentation → console handoff</li></ul>

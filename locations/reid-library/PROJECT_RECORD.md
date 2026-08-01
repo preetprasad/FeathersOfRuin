@@ -63,6 +63,7 @@ This document is the durable record of the decisions, pivots, rationale, action 
 | Add a dedicated interactive presentation route | A live explanation can connect data-science concepts, calculated outputs, and exact implementation more effectively than a static deck | `/presentation` provides 11 guided sections, four interactive concept surfaces, keyboard controls, code links, and a direct handoff to the evidence console |
 | Separate public, presentation, and team operations | Landing, judging narrative, and private coordination serve different users and should not compete inside one interface | `/` remains the evidence console, `/presentation` explains the solution, and `/admin` handles team operations |
 | Protect admin with a signed shared-secret session | The public Vercel deployment cannot rely on Sites workspace identity, and private team content should not be secured only by obscurity | A server-only access code creates an eight-hour HMAC-signed HttpOnly cookie; every admin render verifies it server-side |
+| Extend the admin session boundary to presentation mode | The public landing page should remain available while team strategy, source walkthroughs, and the judging narrative stay restricted | Direct unauthenticated `/presentation` requests redirect to `/admin`, then return after successful verification |
 | Keep contribution attribution honest and editable | Only Preet's repository delivery is evidenced locally; inventing individual teammate work would undermine the project record | Unknown entries begin as needs-confirmation and can be saved device-locally by the authenticated team |
 | Integrate the salvaged-sensor thread as a trust gate, not a second main scope | The Barry J source already contributes evidence to the selected early-warning workflow; its quality should be justified before use | Seven calculated gates now produce a provisional admit-with-calibration or reject decision |
 | Make the sensor trust gate fail closed at row-level edges | Safety evidence cannot tolerate a single missing interval, impossible value, duplicate timestamp, or frozen run being hidden by a high aggregate percentage | Coverage, cadence, completeness, and range must be exact; calibration requires at least 24 stable rows and corrected residual MAE no greater than `0.05 m³/s` |
@@ -251,7 +252,7 @@ These are retrospective results on the event dataset. They are not a production 
 - [ ] Start Ollama, the token-protected proxy, and ngrok; keep the Mac awake and connected to power.
 - [ ] Confirm the current tunnel URL matches the production `OLLAMA_REMOTE_URL` value.
 - [ ] Open `/api/briefing/health` and confirm Ollama is available and Claude is on standby.
-- [ ] Run the complete automated suite and verify all 38 tests pass.
+- [ ] Run the complete automated suite and verify all 39 tests pass.
 - [ ] Test the public Vercel URL in a private browser window with no existing session.
 - [ ] Generate one live briefing for a water incident and one for ventilation.
 - [ ] Replay both recorded failures, then show the Sensor Trust Gate baseline and at least two reject scenarios without presenting the salvaged sensor as a second selected thread.
