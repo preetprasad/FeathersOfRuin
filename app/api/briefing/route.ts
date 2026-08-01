@@ -25,14 +25,21 @@ async function generateWithGateway(input: BriefingRequest): Promise<IncidentBrie
   return incidentBriefSchema.parse(result.output);
 }
 
-async function generateWithOllama(input: BriefingRequest): Promise<IncidentBrief> {
-  const baseUrl = (process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434").replace(/\/$/, "");
+async function generateWithOllama(
+  input: BriefingRequest,
+  configuredUrl = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434",
+  token?: string,
+): Promise<IncidentBrief> {
+  const baseUrl = configuredUrl.replace(/\/$/, "");
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const response = await fetch(`${baseUrl}/api/chat`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           model: process.env.OLLAMA_MODEL || "gemma3:4b",
           stream: false,
@@ -66,8 +73,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const useGateway = Boolean(process.env.VERCEL || process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY);
-    const brief = useGateway ? await generateWithGateway(input) : await generateWithOllama(input);
+    const useRemoteOllama = Boolean(process.env.OLLAMA_REMOTE_URL && process.env.OLLAMA_REMOTE_TOKEN);
+    const useGateway = !useRemoteOllama && Boolean(process.env.VERCEL || process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY);
+    const brief = useRemoteOllama
+      ? await generateWithOllama(input, process.env.OLLAMA_REMOTE_URL, process.env.OLLAMA_REMOTE_TOKEN)
+      : useGateway
+        ? await generateWithGateway(input)
+        : await generateWithOllama(input);
     const allowedCitations = new Set(input.evidence.map((item) => item.id));
     const deterministic = deterministicBrief(input);
     const allowedActions = input.kind === "water"
@@ -92,7 +104,11 @@ export async function POST(request: Request) {
       uncertaintyFactors: uncertaintyFactors.length ? uncertaintyFactors : deterministic.uncertaintyFactors,
     };
     if (!safeBrief.evidenceCitations.length) safeBrief.evidenceCitations = [input.evidence[0].id];
-    return Response.json({ brief: safeBrief, mode: "live", provider: useGateway ? "Vercel AI Gateway" : "Local Ollama" });
+    return Response.json({
+      brief: safeBrief,
+      mode: "live",
+      provider: useRemoteOllama ? "4Freshers Ollama bridge" : useGateway ? "Vercel AI Gateway" : "Local Ollama",
+    });
   } catch (error) {
     console.error("Briefing generation failed", error instanceof Error ? error.message : "Unknown error");
     return Response.json({
