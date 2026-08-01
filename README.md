@@ -4,6 +4,15 @@
 >
 > This README converts the event website into an actionable guide for ideation, implementation, and presentation. Statements marked **Official brief** come directly from the event material. Sections labelled **Suggested direction** are team guidance, not extra competition rules.
 
+## Team 4Freshers
+
+| Team member |
+|---|
+| Preet Prasad |
+| Juan enrique Somadinata |
+| Dinh Khanh Duy Nguyen |
+| jeongyun chae |
+
 ## Quick facts
 
 | Item | Details |
