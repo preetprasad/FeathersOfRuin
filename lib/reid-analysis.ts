@@ -74,6 +74,16 @@ export type FailureSignaturePoint = {
   vibrationRisk: number | null;
 };
 
+export type SensorTrustStatus = "pass" | "adjusted" | "fail";
+
+export type SensorTrustCheck = {
+  id: string;
+  label: string;
+  status: SensorTrustStatus;
+  value: string;
+  detail: string;
+};
+
 export type DetectorThresholds = {
   pressureDrop3h: number;
   flowDrop3h: number;
@@ -517,6 +527,149 @@ export function buildFailureSignature(rows: SensorRow[], windowHours = 24) {
     failureCount: failureIndexes.length,
     points,
     baselines: { pressureKpa: 350, flowLps: 2.2, vibrationFailureScale: 1 },
+  };
+}
+
+const SENSOR_BOUNDS = {
+  power: [0, 100],
+  airflow: [0, 12],
+  pressure: [0, 500],
+  flow: [0, 5],
+  temperature: [5, 40],
+  vibration: [0, 2],
+} as const;
+
+function longestRepeatedRun(values: Array<number | null>) {
+  let longest = 0;
+  let current = 0;
+  let previous: number | null | undefined;
+  for (const value of values) {
+    if (value === null) {
+      current = 0;
+      previous = undefined;
+    } else if (value === previous) {
+      current += 1;
+    } else {
+      current = 1;
+      previous = value;
+    }
+    longest = Math.max(longest, current);
+  }
+  return longest;
+}
+
+export function analyzeSensorTrust(rows: SensorRow[], source = "barry_j_smart_sensor") {
+  const sourceRows = rows.filter((row) => row.source === source);
+  const first = sourceRows[0]?.timestamp;
+  const last = sourceRows.at(-1)?.timestamp;
+  const expectedRows = first && last ? Math.round((last.getTime() - first.getTime()) / 3_600_000) + 1 : 0;
+  const cadenceIntervals = sourceRows.slice(1).map((row, index) =>
+    (row.timestamp.getTime() - sourceRows[index].timestamp.getTime()) / 3_600_000);
+  const hourlyIntervals = cadenceIntervals.filter((hours) => hours === 1).length;
+  const numericKeys = ["power", "airflow", "pressure", "flow", "temperature", "vibration"] as const;
+  const expectedNumericValues = sourceRows.length * numericKeys.length;
+  const presentNumericValues = sourceRows.reduce((total, row) =>
+    total + numericKeys.filter((key) => row[key] !== null).length, 0);
+  const rangeValues = sourceRows.flatMap((row) => numericKeys.map((key) => {
+    const value = row[key];
+    const [min, max] = SENSOR_BOUNDS[key];
+    return value === null ? null : value >= min && value <= max;
+  })).filter((value): value is boolean => value !== null);
+  const inRangeValues = rangeValues.filter(Boolean).length;
+  const frozenChannels = numericKeys.filter((key) => longestRepeatedRun(sourceRows.map((row) => row[key])) >= 4);
+  const stableRows = sourceRows.filter((row) => row.status === "stable" && row.power !== null && row.airflow !== null);
+  const rawResiduals = stableRows.map((row) => row.airflow! - (0.125 * row.power! - 1.5));
+  const correctedResiduals = stableRows.map(airflowResidual).filter((value): value is number => value !== null);
+  const originalReference = rows
+    .filter((row) => row.source === "original" && row.status === "stable")
+    .map(airflowResidual)
+    .filter((value): value is number => value !== null);
+  const mean = (values: number[]) => values.length
+    ? values.reduce((sum, value) => sum + value, 0) / values.length
+    : 0;
+  const rawAirflowOffset = mean(rawResiduals);
+  const correctedResidualMean = mean(correctedResiduals);
+  const correctedResidualMae = mean(correctedResiduals.map(Math.abs));
+  const coverage = sourceRows.length / Math.max(expectedRows, 1);
+  const cadence = hourlyIntervals / Math.max(cadenceIntervals.length, 1);
+  const completeness = presentNumericValues / Math.max(expectedNumericValues, 1);
+  const plausibleRange = inRangeValues / Math.max(rangeValues.length, 1);
+
+  const checks: SensorTrustCheck[] = [
+    {
+      id: "identity",
+      label: "Identity normalised",
+      status: source === "barry_j_smart_sensor" ? "adjusted" : "pass",
+      value: source,
+      detail: "The truncated CSV source name is mapped to the documented smart-sensor identity.",
+    },
+    {
+      id: "coverage",
+      label: "Coverage complete",
+      status: coverage >= 0.95 ? "pass" : "fail",
+      value: `${sourceRows.length}/${expectedRows} hours`,
+      detail: "Observed rows are compared with every expected hourly position between the first and last reading.",
+    },
+    {
+      id: "cadence",
+      label: "Cadence consistent",
+      status: cadence >= 0.95 ? "pass" : "fail",
+      value: `${hourlyIntervals}/${cadenceIntervals.length} hourly gaps`,
+      detail: "Consecutive timestamps should remain on the documented one-hour sampling interval.",
+    },
+    {
+      id: "completeness",
+      label: "Numeric fields complete",
+      status: completeness >= 0.98 ? "pass" : "fail",
+      value: `${presentNumericValues}/${expectedNumericValues} values`,
+      detail: "Power, airflow, water, temperature, and vibration fields are checked independently.",
+    },
+    {
+      id: "range",
+      label: "Ranges plausible",
+      status: plausibleRange >= 0.99 ? "pass" : "fail",
+      value: `${inRangeValues}/${rangeValues.length} values`,
+      detail: "Readings must remain inside broad physical screening bounds before they reach the detector.",
+    },
+    {
+      id: "frozen",
+      label: "No frozen channels",
+      status: frozenChannels.length === 0 ? "pass" : "fail",
+      value: frozenChannels.length ? frozenChannels.join(", ") : "0 channels",
+      detail: "Four or more identical consecutive numeric readings are treated as a possible stuck sensor.",
+    },
+    {
+      id: "calibration",
+      label: "Airflow bias corrected",
+      status: stableRows.length >= 24 && correctedResidualMae <= 0.05 ? "adjusted" : "fail",
+      value: `${rawAirflowOffset >= 0 ? "+" : ""}${rawAirflowOffset.toFixed(3)} → ${correctedResidualMean >= 0 ? "+" : ""}${correctedResidualMean.toFixed(3)} m³/s`,
+      detail: "Healthy airflow residual is compared before and after the source-specific calibration correction.",
+    },
+  ];
+  const failedChecks = checks.filter((check) => check.status === "fail").length;
+
+  return {
+    source,
+    rowCount: sourceRows.length,
+    stableRows: stableRows.length,
+    firstTimestamp: first ?? null,
+    lastTimestamp: last ?? null,
+    expectedRows,
+    expectedNumericValues,
+    presentNumericValues,
+    frozenChannels,
+    rawAirflowOffset,
+    correctedResidualMean,
+    correctedResidualMae,
+    originalResidualMean: mean(originalReference),
+    passedGates: checks.length - failedChecks,
+    adjustedGates: checks.filter((check) => check.status === "adjusted").length,
+    failedGates: failedChecks,
+    decision: failedChecks > 0 ? "reject" as const : Math.abs(rawAirflowOffset) >= 0.05
+      ? "admit-with-calibration" as const
+      : "admit" as const,
+    confidence: sourceRows.length >= 168 ? "established" as const : "provisional" as const,
+    checks,
   };
 }
 

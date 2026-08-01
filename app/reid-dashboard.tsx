@@ -17,6 +17,7 @@ import {
 import {
   airflowResidual,
   analyzeDetectorSensitivity,
+  analyzeSensorTrust,
   backtestDetector,
   buildFailureSignature,
   buildIncidentTimeline,
@@ -432,6 +433,80 @@ function AnalysisMethodPanel({
   );
 }
 
+function SensorTrustGate({ report }: { report: ReturnType<typeof analyzeSensorTrust> }) {
+  const decisionLabel = report.decision === "admit-with-calibration"
+    ? "Admit with calibration"
+    : report.decision === "admit" ? "Admit" : "Reject";
+  const residuals = [
+    { label: "Original healthy reference", value: report.originalResidualMean, kind: "reference" },
+    { label: "Barry J · raw", value: report.rawAirflowOffset, kind: "raw" },
+    { label: "Barry J · corrected", value: report.correctedResidualMean, kind: "corrected" },
+  ];
+
+  return (
+    <section className="panel sensor-trust-panel">
+      <div className="sensor-trust-heading">
+        <div>
+          <span className="eyebrow">Salvaged sensor · onboarding gate</span>
+          <h2>Trust it only after the evidence clears</h2>
+          <p>Barry J readings are screened before they can support warnings. Passing this historical gate permits calibrated use; it does not remove the need for future drift monitoring.</p>
+        </div>
+        <div className={`trust-decision ${report.decision === "reject" ? "rejected" : "admitted"}`}>
+          <span>{report.confidence} decision</span>
+          <strong>{decisionLabel}</strong>
+          <p>{report.passedGates}/{report.checks.length} gates cleared · {report.adjustedGates} controlled adjustments</p>
+        </div>
+      </div>
+
+      <div className="trust-evidence-grid">
+        <div className="trust-checks">
+          {report.checks.map((check) => (
+            <article className={`trust-check ${check.status}`} key={check.id}>
+              <div>
+                <span>{check.status}</span>
+                <strong>{check.label}</strong>
+              </div>
+              <b>{check.value}</b>
+              <p>{check.detail}</p>
+            </article>
+          ))}
+        </div>
+
+        <aside className="calibration-card">
+          <span className="micro-label">Airflow residual · healthy rows</span>
+          <h3>The bias is measurable—and removable</h3>
+          <p className="calibration-copy">Residual compares delivered airflow with <code>0.125 × power − 1.5</code>. Zero is agreement with the healthy relationship.</p>
+          <div className="residual-axis" aria-label="Mean healthy airflow residual before and after correction">
+            <div className="axis-scale"><span>−0.20</span><span>0</span><span>+0.20 m³/s</span></div>
+            {residuals.map((item) => {
+              const barWidth = Math.max(Math.min(Math.abs(item.value) / 0.2 * 50, 50), 0.35);
+              return (
+                <div className="residual-row" key={item.label}>
+                  <div className="residual-label"><span>{item.label}</span><strong>{item.value >= 0 ? "+" : ""}{item.value.toFixed(3)}</strong></div>
+                  <div className="residual-track">
+                    <i className="zero-line" />
+                    <i
+                      className={`residual-bar ${item.kind} ${item.value < 0 ? "negative" : "positive"}`}
+                      style={item.value < 0 ? { right: "50%", width: `${barWidth}%` } : { left: "50%", width: `${barWidth}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <dl className="trust-window">
+            <div><dt>Observed window</dt><dd>{report.rowCount} hours</dd></div>
+            <div><dt>Healthy rows</dt><dd>{report.stableRows}</dd></div>
+            <div><dt>Corrected MAE</dt><dd>{report.correctedResidualMae.toFixed(4)} m³/s</dd></div>
+            <div><dt>Monitoring state</dt><dd>Provisional</dd></div>
+          </dl>
+          <p className="trust-boundary">Gate boundary: status labels select healthy rows for retrospective calibration validation only. Sensor health checks run before detector evidence is trusted.</p>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
 export function ReidDashboard() {
   const allRows = useMemo(() => prepareSensorData(sensorData as RawSensorRecord[]), []);
   const allDetections = useMemo(() => runDetector(allRows), [allRows]);
@@ -439,6 +514,7 @@ export function ReidDashboard() {
   const backtest = useMemo(() => backtestDetector(allRows, allDetections), [allRows, allDetections]);
   const sensitivityProfiles = useMemo(() => analyzeDetectorSensitivity(allRows), [allRows]);
   const failureSignature = useMemo(() => buildFailureSignature(allRows), [allRows]);
+  const sensorTrust = useMemo(() => analyzeSensorTrust(allRows), [allRows]);
   const [episodeId, setEpisodeId] = useState<string | null>(null);
   const [metricGroup, setMetricGroup] = useState<MetricGroup>("water");
   const [aiBrief, setAiBrief] = useState<IncidentBrief | null>(null);
@@ -765,6 +841,8 @@ export function ReidDashboard() {
             </section>
 
             <AnalysisMethodPanel signature={failureSignature} confirmedLeadHours={backtest.confirmedLeadHours} />
+
+            <SensorTrustGate report={sensorTrust} />
 
             <IncidentTimeline kind={episode.kind} milestones={incidentTimeline} />
 

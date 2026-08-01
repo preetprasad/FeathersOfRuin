@@ -37,6 +37,8 @@ test("server-renders the Reid Sentinel product", async () => {
   assert.match(html, /Water failure 02/);
   assert.match(html, /Transparent detector/);
   assert.match(html, /Cloudy.+incident brief/);
+  assert.match(html, /Admit with calibration/);
+  assert.match(html, /300\/300 values/);
   assert.match(html, /og\.png/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
@@ -78,6 +80,9 @@ test("keeps the evidence source and starter preview out of the finished product"
   assert.match(dashboard, /From raw readings to an early warning/);
   assert.match(dashboard, /mean of/);
   assert.match(dashboard, /Five-stage data analysis method/);
+  assert.match(dashboard, /Salvaged sensor/);
+  assert.match(dashboard, /Trust it only after the evidence clears/);
+  assert.match(dashboard, /Airflow residual/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton|drizzle/);
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });

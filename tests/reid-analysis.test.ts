@@ -4,6 +4,7 @@ import sensorData from "../locations/reid-library/data/processed/reid_library_se
 import {
   backtestDetector,
   analyzeDetectorSensitivity,
+  analyzeSensorTrust,
   buildIncidentTimeline,
   buildFailureSignature,
   detectEpisodes,
@@ -93,4 +94,29 @@ test("builds a retrospective average signature across both recorded failures", (
   assert.ok((first.pressureHealth ?? 0) - (failure.pressureHealth ?? 0) > 60);
   assert.ok((first.flowHealth ?? 0) - (failure.flowHealth ?? 0) > 70);
   assert.ok((failure.vibrationRisk ?? 0) - (first.vibrationRisk ?? 0) > 70);
+});
+
+test("admits the salvaged sensor provisionally after applying its measured airflow correction", () => {
+  const trust = analyzeSensorTrust(rows);
+
+  assert.equal(trust.rowCount, 50);
+  assert.equal(trust.expectedRows, 50);
+  assert.equal(trust.presentNumericValues, 300);
+  assert.equal(trust.expectedNumericValues, 300);
+  assert.equal(trust.frozenChannels.length, 0);
+  assert.ok(Math.abs(trust.rawAirflowOffset - 0.15) < 0.001);
+  assert.ok(trust.correctedResidualMae < 0.001);
+  assert.equal(trust.failedGates, 0);
+  assert.equal(trust.decision, "admit-with-calibration");
+  assert.equal(trust.confidence, "provisional");
+});
+
+test("rejects a salvaged sensor record that loses an entire numeric channel", () => {
+  const damaged = rows.map((row) => row.source === "barry_j_smart_sensor" ? { ...row, airflow: null } : row);
+  const trust = analyzeSensorTrust(damaged);
+
+  assert.equal(trust.decision, "reject");
+  assert.ok(trust.failedGates >= 2);
+  assert.equal(trust.checks.find((check) => check.id === "completeness")?.status, "fail");
+  assert.equal(trust.checks.find((check) => check.id === "calibration")?.status, "fail");
 });
