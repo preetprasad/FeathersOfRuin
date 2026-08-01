@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 
 export function AdminLogin({ configured }: { configured: boolean }) {
   const [code, setCode] = useState("");
@@ -32,7 +31,9 @@ export function AdminLogin({ configured }: { configured: boolean }) {
     <main className="admin-gate">
       <div className="admin-gate-map" aria-hidden="true"><i /><i /><i /><i /></div>
       <section className="admin-gate-card">
-        <Link className="admin-gate-brand" href="/"><span>RS</span><strong>REID SENTINEL</strong></Link>
+        {/* Native links avoid a client hydration incompatibility in the Sites runtime. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a className="admin-gate-brand" href="/"><span>RS</span><strong>REID SENTINEL</strong></a>
         <span className="admin-security-label">Restricted den · 4Freshers only</span>
         <h1>Wait—verify if your dragon paws belong to <em>4Freshers.</em></h1>
         <p>The contribution ledger, demo runbook, deployment status, and team controls live beyond this gate.</p>
@@ -48,7 +49,11 @@ export function AdminLogin({ configured }: { configured: boolean }) {
         ) : (
           <div className="admin-config-warning"><strong>Gate not configured</strong><p>Add the two server-only admin values described in <code>.env.example</code>, then redeploy.</p></div>
         )}
-        <footer><span>Signed sessions expire after 8 hours.</span><Link href="/">Return to public console</Link></footer>
+        <footer>
+          <span>Signed sessions expire after 8 hours.</span>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/">Return to public console</a>
+        </footer>
       </section>
     </main>
   );

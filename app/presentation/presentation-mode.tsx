@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import sensorData from "../../locations/reid-library/data/processed/reid_library_sensor_data.json";
 import {
   DETECTOR_PROFILES,
@@ -277,7 +276,9 @@ export function PresentationMode() {
         <nav aria-label="Presentation actions">
           <span>{String(activeSlide + 1).padStart(2, "0")} / {slides.length}</span>
           <button onClick={() => setStoryVisible(true)} type="button">Replay story</button>
-          <Link href="/">Open evidence console</Link>
+          {/* Native links keep client navigation compatible with both Next and Sites runtimes. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/">Open evidence console</a>
         </nav>
       </header>
 
@@ -542,7 +543,8 @@ export function PresentationMode() {
               <article><strong>{Math.round(backtest.recall * 100)}%</strong><span>unsafe-hour recall</span></article>
             </div>
             <div className="outcome-actions">
-              <Link className="primary" href="/">Enter the live evidence console <span>→</span></Link>
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+              <a className="primary" href="/">Enter the live evidence console <span>→</span></a>
               <a href={REPO} rel="noreferrer" target="_blank">Inspect the repository ↗</a>
               <button onClick={() => goToSlide(0)} type="button">Restart presentation</button>
             </div>
