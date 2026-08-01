@@ -165,6 +165,68 @@ Use the shortest relevant answer. Two questions will usually consume the complet
 
 > It is a working decision-support prototype with implemented analysis, trust testing, failover, citation validation, and operator auditing. Production deployment would add authenticated user identities, a server-side audit database, live sensor ingestion, alert delivery, and validation across more buildings and failure events.
 
+### How accessible is the application?
+
+> We support keyboard navigation, semantic controls, labelled charts, announced state changes, skip controls, and automatic reduced-motion bypass. Important status is communicated through text and values, not colour alone, and mobile controls use a 44-pixel target. I would not claim complete WCAG compliance yet; formal screen-reader, contrast, and focus-order testing is the next validation step.
+
+### Which feature best answers the committee's scenario?
+
+> The Sensor Trust Gate. It evaluates every recovered source for completeness, timestamp continuity, physical plausibility, frozen channels, and calibration stability. A stable bias can be admitted with calibration, while missing, impossible, frozen, or drifting evidence is rejected. That directly addresses continuously arriving information that may disagree.
+
+### What happens if the internet or AI provider fails?
+
+> Detection continues because AI does not produce the warning. Ollama is the primary briefing provider, followed by hosted fallbacks. If every model is unavailable, Reid Sentinel produces a cited deterministic safe brief. Operators still receive the evidence and approved actions.
+
+### What is the biggest limitation?
+
+> The evidence contains only 500 historical readings and two recorded failures. It proves the implemented method on the supplied scenario, but it is not enough to claim universal accuracy. More buildings, seasons, sensor types, and failure events are required before operational deployment.
+
+### What would you build next?
+
+> First, live sensor ingestion. Second, authenticated operator identities and an append-only server audit log. Third, notifications and escalation policies. Finally, broader validation across buildings and seasons, with thresholds configured for each physical system.
+
+### What makes this different from an AI dashboard?
+
+> The warning is produced by transparent physical analysis, not an LLM. Reid Sentinel adds source admission, cross-signal corroboration, visualised evidence, provider-independent explanation, verified citations, approved actions, and a recorded human decision. AI is one controlled layer inside a larger evidence chain.
+
+### Can it work in other buildings?
+
+> The pipeline is reusable, but physical baselines and thresholds must be calibrated for each system. Source validation, provenance, corroboration, briefing validation, and human approval generalise; the exact pressure, flow, and airflow boundaries should not be copied blindly.
+
+### How do you avoid too many alerts?
+
+> We tested conservative, balanced, and sensitive profiles across all 500 records. The balanced profile retained 21- to 23-hour confirmed warning, recovered both failures, achieved 96 percent unsafe-hour recall, and produced zero confirmed false-alert hours. Missing data creates a watch rather than a confirmed emergency.
+
+### Could a peacock manipulate the AI through a malicious note?
+
+> Evidence text is treated as untrusted data, not an instruction. The model receives a bounded evidence package, must follow a strict output schema, must cite valid detector signal IDs, and can only return approved actions. Invented citations and inappropriate actions are filtered out.
+
+### What data is sent to the AI?
+
+> Only the bounded, validated incident evidence required for the brief—not the complete raw archive or private administrative data. Credentials stay server-side, and local Ollama can keep the primary briefing path under team control.
+
+### Is the operator audit secure?
+
+> In this hackathon prototype it is honestly labelled device-local. It records the operator, rationale, evidence snapshot, and AI provenance, but it is not tamper-resistant or multi-user. Production would require authenticated identities and server-side append-only storage.
+
+### Why are the admin and presentation protected?
+
+> The evidence console is public, while team contributions, strategy, and presentation materials are protected by a signed, expiring, HttpOnly session. This separates public decision support from private team operations.
+
+### Does the system ignore the young dragons?
+
+> No. Their observations are preserved as identifiable evidence and can create an early watch. However, a subjective observation cannot confirm a failure alone; escalation requires independent physical corroboration. This respects their knowledge without asking one source to carry the entire decision.
+
+### Who makes the final decision?
+
+> A human operator. Reid Sentinel recommends only reviewed, reversible actions and displays uncertainty. The operator selects the response, explains the rationale, and records the evidence and AI provenance available at that moment.
+
+### If a question exposes an unimplemented area
+
+Use this structure instead of improvising or overclaiming:
+
+> That is an important limitation. In the current prototype, we handle it through the safeguard you can see here. Before production, we would validate or add the missing capability. We deliberately do not claim that part is production-ready yet.
+
 ## Claims to keep precise
 
 - Say **the deterministic detector creates the warning; AI explains it**.
