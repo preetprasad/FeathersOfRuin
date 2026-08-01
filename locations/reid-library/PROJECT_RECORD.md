@@ -60,6 +60,7 @@ This document is the durable record of the decisions, pivots, rationale, action 
 | Add threshold sensitivity analysis | A single threshold set without comparison looks arbitrary | Conservative, balanced, and sensitive profiles are rerun over all 500 rows |
 | Keep the balanced profile active | Conservative delays confirmation; sensitive adds alert load without lead-time benefit | Balanced provides 21–23 hours confirmed lead, 96.21% confirmed unsafe-hour coverage, and zero false confirmed alert-hours |
 | Add a presentation-ready method component | A side-quest hint said to explain the analysis method and visualise its result | The interface shows a five-stage pipeline and a calculated mean 24-hour signature across both failures |
+| Integrate the salvaged-sensor thread as a trust gate, not a second main scope | The Barry J source already contributes evidence to the selected early-warning workflow; its quality should be justified before use | Seven calculated gates now produce a provisional admit-with-calibration or reject decision |
 
 ### AI architecture
 
@@ -130,6 +131,7 @@ All milestones below occurred on 1 August 2026 AWST.
 | 13:11 | `d340066` | Added operator decision auditing. **Takeaway:** record who decided what and why, not only the AI output. |
 | 13:32 | `2880f39` | Added the cinematic Reid Library opening. **Takeaway:** narrative should introduce, not obstruct, the evidence workflow. |
 | 13:45 | `cbf3de1` | Added the five-stage analysis method and averaged failure-signature visual. **Takeaway:** present both method and measurable result explicitly. |
+| 14:05 | `b82da00` | Added the salvaged-sensor trust gate and rejection tests. **Takeaway:** calibration should be an explicit admission decision, not an invisible correction. |
 
 ## 5. Current architecture
 
@@ -137,6 +139,7 @@ All milestones below occurred on 1 August 2026 AWST.
 Checked-in Reid data
   → ingestion and source normalisation
   → healthy baseline and sensor correction
+  → salvaged-sensor identity, coverage, cadence, completeness, range, freeze and calibration gate
   → transparent time-series features
   → corroborated detector
   → incident discovery, timeline, backtest, sensitivity, signature chart
@@ -169,7 +172,14 @@ The model is downstream of the detector. Model failure does not remove sensor ev
 | Mean pressure-health change, T−24h to failure | −81 points |
 | Mean flow-health change, T−24h to failure | −91 points |
 | Mean vibration-risk change, T−24h to failure | +90 points |
-| Automated tests | 21 passing |
+| Salvaged-source coverage | 50 of 50 expected hourly rows |
+| Salvaged-source cadence | 49 of 49 one-hour gaps |
+| Salvaged-source numeric completeness | 300 of 300 values |
+| Salvaged-source frozen channels | 0 |
+| Barry J airflow residual | `+0.150 m³/s` raw → approximately `0.000 m³/s` corrected |
+| Corrected Barry J residual MAE | Approximately `0.0003 m³/s` |
+| Sensor gate decision | Admit with calibration · provisional |
+| Automated tests | 23 passing |
 
 These are retrospective results on the event dataset. They are not a production safety certification.
 
@@ -229,9 +239,10 @@ These are retrospective results on the event dataset. They are not a production 
 - [ ] Start Ollama, the token-protected proxy, and ngrok; keep the Mac awake and connected to power.
 - [ ] Confirm the current tunnel URL matches the production `OLLAMA_REMOTE_URL` value.
 - [ ] Open `/api/briefing/health` and confirm Ollama is available and Claude is on standby.
-- [ ] Run the complete automated suite and verify all 21 tests pass.
+- [ ] Run the complete automated suite and verify all 23 tests pass.
 - [ ] Test the public Vercel URL in a private browser window with no existing session.
 - [ ] Generate one live briefing for a water incident and one for ventilation.
+- [ ] Show the Sensor Trust Gate, its measured `+0.150 m³/s` correction, provisional admission, and reject-on-missing-channel safety test.
 - [ ] Demonstrate one operator decision, resolution note, and JSON export.
 - [ ] Prepare backup screenshots or a short recording in case venue networking fails.
 - [ ] Freeze features after rehearsal; accept only fixes that improve demo reliability or clarity.
@@ -266,6 +277,7 @@ These are retrospective results on the event dataset. They are not a production 
 - Fine-tuning was not the right first move. Schema, prompt boundaries, evidence design, and post-generation validation solved the actual task more directly.
 - Backtesting alone was insufficient for explanation. Timelines, sensitivity analysis, and the averaged signature turned metrics into judge-readable evidence.
 - A high recall number is not enough. Alert burden and confirmation timing determine whether operators can trust a warning.
+- A salvaged sensor should not become trusted merely because it has data. Identity, coverage, cadence, completeness, plausible ranges, frozen values, and calibrated agreement need an explicit gate.
 - A human-in-the-loop claim becomes credible only when the interface records the decision, rationale, evidence state, and outcome.
 - Storytelling was added after the core workflow was stable. This kept the cinematic layer from becoming a substitute for functionality.
 - The safest demo has multiple layers: public hosting, local AI, hosted AI, deterministic fallback, tests, a runbook, and offline visual backups.

@@ -177,6 +177,7 @@ Current capabilities:
 - Automatically discovers two failures and two ventilation warnings instead of relying on hard-coded incident windows
 - Switches between water, ventilation, and shelter signal views
 - Calculates the healthy power-to-airflow relationship and corrects the known Barry J airflow offset
+- Runs the salvaged Barry J source through an explicit trust gate covering identity, coverage, cadence, completeness, physical ranges, frozen channels, and post-calibration agreement
 - Surfaces water decline, vibration, listener observations, missing values, and temperature consequence
 - Keeps `system_status` as an evaluation ribbon rather than using it as detector input
 - Traces every detector signal to the relevant recovered Cloudy note
@@ -233,6 +234,33 @@ The adjoining result chart aligns the onset of the two recorded failures and ave
 Suggested presentation explanation:
 
 > We first cleaned the 500 hourly records and corrected the salvaged sensor identity and offset. We learned the healthy power-to-airflow relationship, then engineered transparent time-series features: three-hour water decline, airflow residual, vibration, sound, and missingness. We only escalate when independent signals corroborate each other. Finally, we backtest the detector against the supplied status labels after detection. The visual shows the result: across both failures, pressure and flow fall together while vibration rises, and the balanced rules confirm warning 21 to 23 hours before failure without a false confirmed alert-hour.
+
+### Salvaged sensor trust gate
+
+The Barry J smart sensor is treated as a supporting safety layer for **Two failures, no warning**, not as a change to the selected main thread. Its readings must clear an onboarding gate before they can contribute trusted detector evidence.
+
+| Gate | Calculated result | Outcome |
+|---|---:|---|
+| Source identity | `barry_j_` mapped to `barry_j_smart_sensor` | Adjusted |
+| Time coverage | 50 of 50 expected hourly rows | Pass |
+| Sampling cadence | 49 of 49 gaps equal one hour | Pass |
+| Numeric completeness | 300 of 300 expected numeric values | Pass |
+| Broad physical ranges | 300 of 300 present numeric values inside screening bounds | Pass |
+| Frozen channels | 0 channels with four repeated consecutive values | Pass |
+| Healthy airflow agreement | Raw `+0.150 m³/s` residual corrected to approximately `0.000 m³/s` | Adjusted |
+
+The corrected mean absolute airflow residual is approximately `0.0003 m³/s`, matching the healthy power-to-airflow relationship closely in the supplied data. The gate therefore returns:
+
+```text
+Decision: Admit with calibration
+Confidence: Provisional
+Gates cleared: 7 of 7
+Controlled adjustments: source identity and airflow calibration
+```
+
+The decision remains provisional because the salvaged source covers only 50 hours, including 40 historically stable rows. Passing this retrospective gate does not prove future reliability. A live deployment would continue checking freshness, drift, completeness, frozen values, calibration error, and agreement with independent measurements.
+
+The implementation also contains a negative automated test: if the salvaged source loses an entire numeric channel, completeness and calibration fail and the gate returns **Reject**.
 
 ### Calculated incident timeline
 
