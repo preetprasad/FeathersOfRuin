@@ -175,7 +175,7 @@ The complete judged workflow is implemented as the repository's main web applica
 Current capabilities:
 
 - Provides an 11-section, keyboard-controlled presentation mode inside the same application, with interactive residual, corroboration, trust-gate, and threshold-profile demonstrations driven by the production analysis functions
-- Opens presentation mode with a skippable, reduced-motion-aware story transition that moves from the campus and feather strike into the evidence narrative
+- Opens presentation mode with a skippable, reduced-motion-aware story transition: peacock attack, failing shelter systems, four heroes keeping the dragon paws together, the evidence reveal, and Cloudy driving the attacker away with fire
 - Links every presented data-science concept to stable, exact lines in the checked-in implementation and transitions directly into the live evidence console
 - Separates private team operations into a signed-session `/admin` route with new-tab launch controls for presentation and landing surfaces, a device-local contribution ledger, readiness summary, presenter runbook, and sign-out control
 - Opens with a skippable cinematic campus sequence that zooms from the UWA field map into Reid Library, visualises the feather strike and infrastructure failure, introduces Cloudy, and hands off to the evidence console

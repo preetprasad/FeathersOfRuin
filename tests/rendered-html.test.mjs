@@ -53,6 +53,7 @@ test("server-renders the Reid Sentinel product", async () => {
   assert.match(html, /Admit with calibration/);
   assert.match(html, /300\/300 values/);
   assert.match(html, /og\.png/);
+  assert.doesNotMatch(html, /Team access|Presentation mode/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
@@ -80,7 +81,8 @@ test("server-renders the interactive presentation for an authenticated 4Freshers
   assert.match(html, /21–23 hours to act/);
   assert.match(html, /Open exact lines/);
   assert.match(html, /Juan Enrique Somadinata/);
-  assert.match(html, /The feathers fell/);
+  assert.match(html, /Feathers fell\. Systems failed/);
+  assert.match(html, /Four heroes kept every dragon paw together/);
   assert.match(html, /Begin presentation/);
 });
 

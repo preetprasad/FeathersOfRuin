@@ -116,13 +116,20 @@ function PresentationStoryIntro({ onComplete }: { onComplete: () => void }) {
           {Array.from({ length: 16 }, (_, index) => <i key={index} />)}
           <span className="story-reid-marker"><b>RS</b>Reid Library<small>dragon shelter</small></span>
         </div>
-        <div className="story-impact"><i /><i /><i /></div>
+        <span className="story-prelude-label">Attack prelude</span>
       </div>
+      <div className="story-peacock" aria-hidden="true" />
+      <div className="story-feather-volley" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+      <div className="story-system-faults" aria-hidden="true"><span>POWER</span><span>WATER</span><span>AIR</span></div>
+      <div className="story-paws" aria-hidden="true"><i>●</i><i>●</i><i>●</i></div>
+      <div className="story-hero-shield" aria-hidden="true"><i /><i /><i /><i /><strong>4F</strong></div>
+      <div className="story-evidence-trail" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+      <div className="story-cloudy" aria-label="Cloudy the Reid Library dragon flying to defend the shelter" role="img" />
+      <div className="story-dragon-fire" aria-hidden="true"><i /><i /><i /></div>
       <div className="presentation-story-lines">
-        <p>The feathers fell.</p>
-        <p>Reid Library became a shelter.</p>
-        <p>Then the systems began to fail.</p>
-        <div><span>4Freshers presents</span><strong>THE EVIDENCE STORY</strong><small>How 500 readings became 21–23 hours to act</small></div>
+        <p>Feathers fell. Systems failed.</p>
+        <p>Four heroes kept every dragon paw together.</p>
+        <div><span>4Freshers presents</span><strong>THE EVIDENCE STORY</strong><small>500 readings · 21–23 hours to act</small></div>
       </div>
       <button className="presentation-story-enter" onClick={onComplete} type="button">Begin presentation</button>
     </section>
@@ -211,7 +218,7 @@ export function PresentationMode() {
       const reducedTimer = window.setTimeout(() => setStoryVisible(false), 0);
       return () => window.clearTimeout(reducedTimer);
     }
-    const finishTimer = window.setTimeout(() => setStoryVisible(false), 6_400);
+    const finishTimer = window.setTimeout(() => setStoryVisible(false), 10_400);
     const escapeStory = (event: KeyboardEvent) => {
       if (event.key === "Escape") setStoryVisible(false);
     };

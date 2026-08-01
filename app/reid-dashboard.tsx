@@ -870,8 +870,6 @@ export function ReidDashboard() {
           <span>/ essential systems</span>
         </div>
         <div className="topbar-status">
-          <a className="presentation-link" href="/admin">Team access</a>
-          <a className="presentation-link" href="/presentation">Presentation mode</a>
           <button className="replay-intro" onClick={replayIntro} type="button">Replay story</button>
           <div className={`provider-health ${providerHealth?.primary.status || "checking"}`} aria-live="polite">
             <span />
