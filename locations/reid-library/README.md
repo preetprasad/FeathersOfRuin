@@ -164,6 +164,8 @@ The first milestone should:
 
 The first milestone is implemented as the repository's main web application.
 
+**Live public dashboard:** [reid-sentinel.vercel.app](https://reid-sentinel.vercel.app/)
+
 Current capabilities:
 
 - Loads all 500 event records from the checked-in CSV

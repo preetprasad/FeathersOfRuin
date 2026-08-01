@@ -24,6 +24,7 @@
 - [World, regions, and challenge threads](https://ultimate-hackathon.vercel.app/story)
 - [Interactive campus map](https://ultimate-hackathon.vercel.app/map)
 - [Side-quest board](https://ultimate-hackathon.vercel.app/side-quests)
+- [Live Reid Sentinel dashboard](https://reid-sentinel.vercel.app/)
 - [Event datasets](https://drive.google.com/drive/folders/1PhiIBZ-ngRpJv91hGCu_9vg9zpwcYfbp?usp=sharing)
 
 ## Location workspaces
