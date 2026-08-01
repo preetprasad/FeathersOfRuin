@@ -18,6 +18,7 @@ import {
   airflowResidual,
   analyzeDetectorSensitivity,
   backtestDetector,
+  buildFailureSignature,
   buildIncidentTimeline,
   detectEpisodes,
   prepareSensorData,
@@ -331,12 +332,113 @@ function SensitivityPanel({ profiles }: { profiles: ReturnType<typeof analyzeDet
   );
 }
 
+function AnalysisMethodPanel({
+  signature,
+  confirmedLeadHours,
+}: {
+  signature: ReturnType<typeof buildFailureSignature>;
+  confirmedLeadHours: number[];
+}) {
+  const width = 640;
+  const height = 230;
+  const paddingX = 32;
+  const paddingY = 24;
+  const chartPath = (key: "pressureHealth" | "flowHealth" | "vibrationRisk") => signature.points
+    .map((point, index) => {
+      const value = point[key] ?? 0;
+      const x = paddingX + index / Math.max(signature.points.length - 1, 1) * (width - paddingX * 2);
+      const y = height - paddingY - Math.max(0, Math.min(value, 110)) / 110 * (height - paddingY * 2);
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+  const start = signature.points[0];
+  const failure = signature.points.at(-1)!;
+  const pressureLoss = Math.round((start.pressureHealth ?? 0) - (failure.pressureHealth ?? 0));
+  const flowLoss = Math.round((start.flowHealth ?? 0) - (failure.flowHealth ?? 0));
+  const vibrationRise = Math.round((failure.vibrationRisk ?? 0) - (start.vibrationRisk ?? 0));
+  const leadLow = Math.min(...confirmedLeadHours);
+  const leadHigh = Math.max(...confirmedLeadHours);
+
+  const methodSteps = [
+    { number: "01", title: "Clean", detail: "Parse 500 hourly rows, preserve missingness, and normalise the Barry J sensor identity." },
+    { number: "02", title: "Baseline", detail: "Model healthy airflow as 0.125 × power − 1.5 and correct the +0.15 m³/s sensor offset." },
+    { number: "03", title: "Features", detail: "Calculate three-hour water decline, airflow residual, vibration, sound, and missing-data signals." },
+    { number: "04", title: "Corroborate", detail: "Escalate only when independent physical or listener signals agree with the deterioration." },
+    { number: "05", title: "Backtest", detail: "Run detection first, then compare it with supplied status labels to measure lead time and alert load." },
+  ];
+
+  return (
+    <section className="panel analysis-method-panel">
+      <div className="analysis-method-heading">
+        <div>
+          <span className="eyebrow">Data analysis method · reproducible</span>
+          <h2>From raw readings to an early warning</h2>
+        </div>
+        <p>Transparent time-series features produce the alert. AI receives the validated result afterward and turns it into cited decision support.</p>
+      </div>
+
+      <ol className="analysis-pipeline" aria-label="Five-stage data analysis method">
+        {methodSteps.map((step) => (
+          <li key={step.number}>
+            <span>{step.number}</span>
+            <strong>{step.title}</strong>
+            <p>{step.detail}</p>
+          </li>
+        ))}
+      </ol>
+
+      <div className="analysis-result-grid">
+        <div className="failure-signature-chart">
+          <div className="signature-chart-heading">
+            <div>
+              <span className="micro-label">Calculated result · mean of {signature.failureCount} failures</span>
+              <h3>The repeated 24-hour failure signature</h3>
+            </div>
+            <ul aria-label="Chart legend">
+              <li className="pressure">Pressure health</li>
+              <li className="flow">Flow health</li>
+              <li className="vibration">Vibration risk</li>
+            </ul>
+          </div>
+          <svg
+            aria-label="Average water pressure health and flow health fall while vibration risk rises during the 24 hours before both recorded failures"
+            className="signature-chart"
+            role="img"
+            viewBox={`0 0 ${width} ${height}`}
+          >
+            {[0, 25, 50, 75, 100].map((value) => {
+              const y = height - paddingY - value / 110 * (height - paddingY * 2);
+              return <g key={value}><line x1={paddingX} x2={width - paddingX} y1={y} y2={y} /><text x="2" y={y + 3}>{value}</text></g>;
+            })}
+            <path className="pressure-line" d={chartPath("pressureHealth")} />
+            <path className="flow-line" d={chartPath("flowHealth")} />
+            <path className="vibration-line" d={chartPath("vibrationRisk")} />
+            <text className="time-label" x={paddingX} y={height - 3}>T−24h</text>
+            <text className="time-label" textAnchor="middle" x={width / 2} y={height - 3}>T−12h</text>
+            <text className="time-label" textAnchor="end" x={width - paddingX} y={height - 3}>Failure</text>
+          </svg>
+          <p className="signature-truth-note">Historical status is used only to align the two recorded failure onsets for this retrospective visual; the live detector does not receive it.</p>
+        </div>
+
+        <div className="analysis-findings">
+          <span className="micro-label">What the analysis found</span>
+          <div><strong>−{pressureLoss} pts</strong><p>average pressure-health change from T−24h to failure</p></div>
+          <div><strong>−{flowLoss} pts</strong><p>average flow-health change across the same window</p></div>
+          <div><strong>+{vibrationRise} pts</strong><p>average vibration-risk increase before failure</p></div>
+          <div className="lead-result"><strong>{leadLow}–{leadHigh}h</strong><p>confirmed warning lead with the balanced detector</p></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function ReidDashboard() {
   const allRows = useMemo(() => prepareSensorData(sensorData as RawSensorRecord[]), []);
   const allDetections = useMemo(() => runDetector(allRows), [allRows]);
   const episodes = useMemo(() => detectEpisodes(allDetections), [allDetections]);
   const backtest = useMemo(() => backtestDetector(allRows, allDetections), [allRows, allDetections]);
   const sensitivityProfiles = useMemo(() => analyzeDetectorSensitivity(allRows), [allRows]);
+  const failureSignature = useMemo(() => buildFailureSignature(allRows), [allRows]);
   const [episodeId, setEpisodeId] = useState<string | null>(null);
   const [metricGroup, setMetricGroup] = useState<MetricGroup>("water");
   const [aiBrief, setAiBrief] = useState<IncidentBrief | null>(null);
@@ -661,6 +763,8 @@ export function ReidDashboard() {
                 </article>
               </div>
             </section>
+
+            <AnalysisMethodPanel signature={failureSignature} confirmedLeadHours={backtest.confirmedLeadHours} />
 
             <IncidentTimeline kind={episode.kind} milestones={incidentTimeline} />
 

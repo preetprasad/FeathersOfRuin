@@ -5,6 +5,7 @@ import {
   backtestDetector,
   analyzeDetectorSensitivity,
   buildIncidentTimeline,
+  buildFailureSignature,
   detectEpisodes,
   prepareSensorData,
   runDetector,
@@ -78,4 +79,18 @@ test("calculates the lead-time and alert-load trade-off for all threshold profil
   assert.deepEqual(profiles.map((profile) => profile.confirmedFalseAlertHours), [0, 0, 2]);
   assert.ok(profiles[0].confirmedUnsafeRecall < profiles[1].confirmedUnsafeRecall);
   assert.equal(profiles[1].confirmedUnsafeRecall, profiles[2].confirmedUnsafeRecall);
+});
+
+test("builds a retrospective average signature across both recorded failures", () => {
+  const signature = buildFailureSignature(rows);
+  const first = signature.points[0];
+  const failure = signature.points.at(-1)!;
+
+  assert.equal(signature.failureCount, 2);
+  assert.equal(signature.points.length, 25);
+  assert.equal(first.hoursBeforeFailure, 24);
+  assert.equal(failure.hoursBeforeFailure, 0);
+  assert.ok((first.pressureHealth ?? 0) - (failure.pressureHealth ?? 0) > 60);
+  assert.ok((first.flowHealth ?? 0) - (failure.flowHealth ?? 0) > 70);
+  assert.ok((failure.vibrationRisk ?? 0) - (first.vibrationRisk ?? 0) > 70);
 });

@@ -74,6 +74,10 @@ test("keeps the evidence source and starter preview out of the finished product"
   assert.match(dashboard, /Skip intro/);
   assert.match(dashboard, /Replay story/);
   assert.match(dashboard, /Enter evidence console/);
+  assert.match(dashboard, /Data analysis method/);
+  assert.match(dashboard, /From raw readings to an early warning/);
+  assert.match(dashboard, /mean of/);
+  assert.match(dashboard, /Five-stage data analysis method/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton|drizzle/);
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });

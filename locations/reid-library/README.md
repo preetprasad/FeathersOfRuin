@@ -169,6 +169,7 @@ The complete judged workflow is implemented as the repository's main web applica
 Current capabilities:
 
 - Opens with a skippable cinematic campus sequence that zooms from the UWA field map into Reid Library, visualises the feather strike and infrastructure failure, introduces Cloudy, and hands off to the evidence console
+- Presents the complete five-stage analysis method beside a calculated 24-hour signature averaged across both recorded failures
 - Loads all 500 event records from the checked-in CSV
 - Normalises the truncated `barry_j_` sensor identity
 - Automatically discovers two failures and two ventilation warnings instead of relying on hard-coded incident windows
@@ -212,6 +213,24 @@ UWA campus map → Reid Library zoom → feather strike → power/ventilation/wa
 The map is an original HTML/CSS interpretation of the hackathon's north-up field-map visual language rather than a copied screenshot. It identifies the main survivor regions and locates Reid Library before the camera closes in on the selected challenge. The official Cloudy mascot artwork is loaded from the hackathon website so the transition remains connected to the event story.
 
 The intro includes a persistent **Skip intro** control, supports the Escape key, runs only once per browser session, and can be restarted from **Replay story** in the dashboard header. Visitors who request reduced motion bypass the animation automatically. The animation communicates narrative context only; no evidence or operating controls are hidden behind it.
+
+### Presentation-ready analysis method
+
+The dashboard brings the method and the result together in one judge-facing component instead of expecting the presenter to assemble the explanation from separate panels.
+
+The five displayed stages are:
+
+1. **Clean:** Parse all 500 hourly records, retain missing values as uncertainty, normalise timestamps, and normalise the truncated Barry J source name.
+2. **Baseline:** Establish healthy infrastructure relationships. In particular, expected airflow is `0.125 × power_kw − 1.5`, with the observed Barry J `+0.15 m³/s` offset corrected before comparison.
+3. **Features:** Calculate three-hour pressure and flow changes, airflow residual, vibration, listener sound, and missing-data signals.
+4. **Corroborate:** Require independent signals to agree before escalating a water or ventilation warning. Listener observations support a warning but do not prove failure alone.
+5. **Backtest:** Run the detector without `system_status`, then compare its output against those supplied labels afterward to measure lead time, coverage, and false-alert load.
+
+The adjoining result chart aligns the onset of the two recorded failures and averages the preceding 24 hours. Pressure and flow are expressed as health percentages of the stable `350 kPa` and `2.2 L/s` baselines; vibration is expressed on the observed failure scale of `1.0`. This makes the repeated shape directly comparable even though the three fields use different physical units. The chart clearly labels this as retrospective use of the status field and states that the live detector does not receive that label.
+
+Suggested presentation explanation:
+
+> We first cleaned the 500 hourly records and corrected the salvaged sensor identity and offset. We learned the healthy power-to-airflow relationship, then engineered transparent time-series features: three-hour water decline, airflow residual, vibration, sound, and missingness. We only escalate when independent signals corroborate each other. Finally, we backtest the detector against the supplied status labels after detection. The visual shows the result: across both failures, pressure and flow fall together while vibration rises, and the balanced rules confirm warning 21 to 23 hours before failure without a false confirmed alert-hour.
 
 ### Calculated incident timeline
 

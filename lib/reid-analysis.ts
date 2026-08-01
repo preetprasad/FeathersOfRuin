@@ -67,6 +67,13 @@ export type IncidentMilestone = {
   source: "detector" | "evaluation";
 };
 
+export type FailureSignaturePoint = {
+  hoursBeforeFailure: number;
+  pressureHealth: number | null;
+  flowHealth: number | null;
+  vibrationRisk: number | null;
+};
+
 export type DetectorThresholds = {
   pressureDrop3h: number;
   flowDrop3h: number;
@@ -478,6 +485,39 @@ export function analyzeDetectorSensitivity(rows: SensorRow[]) {
         confirmedUnsafeRecall: confirmedUnsafeHours / Math.max(unsafeHours, 1),
       };
     });
+}
+
+function average(values: Array<number | null>) {
+  const present = values.filter((value): value is number => value !== null);
+  return present.length ? present.reduce((sum, value) => sum + value, 0) / present.length : null;
+}
+
+export function buildFailureSignature(rows: SensorRow[], windowHours = 24) {
+  const failureIndexes = rows
+    .map((row, index) => row.status === "failed" && rows[index - 1]?.status !== "failed" ? index : -1)
+    .filter((index) => index >= 0);
+  const points: FailureSignaturePoint[] = [];
+
+  for (let hoursBeforeFailure = windowHours; hoursBeforeFailure >= 0; hoursBeforeFailure -= 1) {
+    const alignedRows = failureIndexes
+      .map((index) => rows[index - hoursBeforeFailure])
+      .filter((row): row is SensorRow => Boolean(row));
+    const pressure = average(alignedRows.map((row) => row.pressure));
+    const flow = average(alignedRows.map((row) => row.flow));
+    const vibration = average(alignedRows.map((row) => row.vibration));
+    points.push({
+      hoursBeforeFailure,
+      pressureHealth: pressure === null ? null : pressure / 350 * 100,
+      flowHealth: flow === null ? null : flow / 2.2 * 100,
+      vibrationRisk: vibration === null ? null : vibration * 100,
+    });
+  }
+
+  return {
+    failureCount: failureIndexes.length,
+    points,
+    baselines: { pressureKpa: 350, flowLps: 2.2, vibrationFailureScale: 1 },
+  };
 }
 
 export function uniqueEvidence(detections: Detection[]) {
