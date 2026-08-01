@@ -11,10 +11,27 @@ import {
   prepareSensorData,
   runDetector,
   type RawSensorRecord,
+  type SensorRow,
 } from "../lib/reid-analysis";
 
 const rows = prepareSensorData(sensorData as RawSensorRecord[]);
 const detections = runDetector(rows);
+
+function rowAt(hour: number, overrides: Partial<SensorRow> = {}): SensorRow {
+  return {
+    timestamp: new Date(Date.UTC(2026, 6, 1, hour)),
+    power: 60,
+    airflow: 6,
+    pressure: 350,
+    flow: 2.2,
+    temperature: 22,
+    vibration: 0.15,
+    sound: "normal",
+    status: "stable",
+    source: "original",
+    ...overrides,
+  };
+}
 
 test("detects the four sustained Reid incidents without using ground-truth status", () => {
   const episodes = detectEpisodes(detections);
@@ -119,4 +136,77 @@ test("rejects a salvaged sensor record that loses an entire numeric channel", ()
   assert.ok(trust.failedGates >= 2);
   assert.equal(trust.checks.find((check) => check.id === "completeness")?.status, "fail");
   assert.equal(trust.checks.find((check) => check.id === "calibration")?.status, "fail");
+});
+
+test("rejects a missing salvaged source instead of treating an empty report as healthy", () => {
+  const trust = analyzeSensorTrust(rows, "not-installed");
+
+  assert.equal(trust.rowCount, 0);
+  assert.equal(trust.decision, "reject");
+  assert.ok(trust.failedGates >= 4);
+});
+
+test("rejects timestamp gaps and duplicates in an otherwise complete salvaged stream", () => {
+  const firstBarry = rows.findIndex((row) => row.source === "barry_j_smart_sensor");
+  const damaged = rows.map((row, index) => index === firstBarry + 10
+    ? { ...row, timestamp: new Date(row.timestamp.getTime() + 3_600_000) }
+    : row);
+  const trust = analyzeSensorTrust(damaged);
+
+  assert.equal(trust.decision, "reject");
+  assert.equal(trust.checks.find((check) => check.id === "cadence")?.status, "fail");
+});
+
+test("rejects one physically impossible salvaged reading", () => {
+  let changed = false;
+  const damaged = rows.map((row) => {
+    if (!changed && row.source === "barry_j_smart_sensor") {
+      changed = true;
+      return { ...row, pressure: 900 };
+    }
+    return row;
+  });
+  const trust = analyzeSensorTrust(damaged);
+
+  assert.equal(trust.decision, "reject");
+  assert.equal(trust.checks.find((check) => check.id === "range")?.status, "fail");
+});
+
+test("rejects a salvaged channel frozen for four consecutive readings", () => {
+  let changed = 0;
+  const damaged = rows.map((row) => {
+    if (row.source === "barry_j_smart_sensor" && changed < 4) {
+      changed += 1;
+      return { ...row, temperature: 20 };
+    }
+    return row;
+  });
+  const trust = analyzeSensorTrust(damaged);
+
+  assert.equal(trust.decision, "reject");
+  assert.ok(trust.frozenChannels.includes("temperature"));
+});
+
+test("keeps a listener-only observation at watch rather than escalating it", () => {
+  const sample = [rowAt(0), rowAt(1), rowAt(2), rowAt(3, { sound: "hum" })];
+  const result = runDetector(sample).at(-1)!;
+
+  assert.equal(result.level, "watch");
+  assert.equal(result.kind, "general");
+  assert.deepEqual(result.signals.map((signal) => signal.id), ["listener-sound"]);
+});
+
+test("does not confirm a water warning when trend signals lack independent corroboration", () => {
+  const sample = [
+    rowAt(0),
+    rowAt(1),
+    rowAt(2),
+    rowAt(3, { pressure: 300, flow: 1.9, sound: "normal", vibration: 0.15 }),
+  ];
+  const result = runDetector(sample).at(-1)!;
+
+  assert.notEqual(result.level, "warning");
+  assert.notEqual(result.level, "critical");
+  assert.ok(result.signals.some((signal) => signal.id === "pressure-trend"));
+  assert.ok(result.signals.some((signal) => signal.id === "flow-trend"));
 });

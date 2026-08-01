@@ -52,3 +52,31 @@ test("round-trips valid audit exports and rejects malformed local data", () => {
   assert.deepEqual(parseAuditLog("not-json"), []);
   assert.deepEqual(parseAuditLog(JSON.stringify({ version: 1, entries: [{ id: "incomplete" }] })), []);
 });
+
+test("does not overwrite the first resolution when the same decision is closed twice", () => {
+  const entry = createAuditEntry(base, new Date("2026-07-16T01:00:00.000Z"), "audit-01");
+  const first = resolveAuditEntry(
+    [entry],
+    entry.id,
+    "First coordinator",
+    "Inspection started.",
+    new Date("2026-07-16T02:00:00.000Z"),
+  );
+  const second = resolveAuditEntry(
+    first,
+    entry.id,
+    "Second coordinator",
+    "Attempted overwrite.",
+    new Date("2026-07-16T03:00:00.000Z"),
+  );
+
+  assert.deepEqual(second, first);
+  assert.equal(second[0].resolution?.operator, "First coordinator");
+});
+
+test("rejects oversized audit history rather than loading an unbounded local payload", () => {
+  const entries = Array.from({ length: 101 }, (_, index) =>
+    createAuditEntry(base, new Date(1_785_000_000_000 + index * 1000), `audit-${index}`));
+
+  assert.deepEqual(parseAuditLog(serializeAuditLog(entries)), []);
+});

@@ -61,6 +61,7 @@ This document is the durable record of the decisions, pivots, rationale, action 
 | Keep the balanced profile active | Conservative delays confirmation; sensitive adds alert load without lead-time benefit | Balanced provides 21–23 hours confirmed lead, 96.21% confirmed unsafe-hour coverage, and zero false confirmed alert-hours |
 | Add a presentation-ready method component | A side-quest hint said to explain the analysis method and visualise its result | The interface shows a five-stage pipeline and a calculated mean 24-hour signature across both failures |
 | Integrate the salvaged-sensor thread as a trust gate, not a second main scope | The Barry J source already contributes evidence to the selected early-warning workflow; its quality should be justified before use | Seven calculated gates now produce a provisional admit-with-calibration or reject decision |
+| Make the sensor trust gate fail closed at row-level edges | Safety evidence cannot tolerate a single missing interval, impossible value, duplicate timestamp, or frozen run being hidden by a high aggregate percentage | Coverage, cadence, completeness, and range must be exact; calibration requires at least 24 stable rows and corrected residual MAE no greater than `0.05 m³/s` |
 
 ### AI architecture
 
@@ -179,7 +180,7 @@ The model is downstream of the detector. Model failure does not remove sensor ev
 | Barry J airflow residual | `+0.150 m³/s` raw → approximately `0.000 m³/s` corrected |
 | Corrected Barry J residual MAE | Approximately `0.0003 m³/s` |
 | Sensor gate decision | Admit with calibration · provisional |
-| Automated tests | 23 passing |
+| Automated tests | 31 passing |
 
 These are retrospective results on the event dataset. They are not a production safety certification.
 
@@ -239,10 +240,10 @@ These are retrospective results on the event dataset. They are not a production 
 - [ ] Start Ollama, the token-protected proxy, and ngrok; keep the Mac awake and connected to power.
 - [ ] Confirm the current tunnel URL matches the production `OLLAMA_REMOTE_URL` value.
 - [ ] Open `/api/briefing/health` and confirm Ollama is available and Claude is on standby.
-- [ ] Run the complete automated suite and verify all 23 tests pass.
+- [ ] Run the complete automated suite and verify all 31 tests pass.
 - [ ] Test the public Vercel URL in a private browser window with no existing session.
 - [ ] Generate one live briefing for a water incident and one for ventilation.
-- [ ] Show the Sensor Trust Gate, its measured `+0.150 m³/s` correction, provisional admission, and reject-on-missing-channel safety test.
+- [ ] Show the Sensor Trust Gate, its measured `+0.150 m³/s` correction, provisional admission, and fail-closed edge tests for absent, incomplete, irregular, impossible, and frozen data.
 - [ ] Demonstrate one operator decision, resolution note, and JSON export.
 - [ ] Prepare backup screenshots or a short recording in case venue networking fails.
 - [ ] Freeze features after rehearsal; accept only fixes that improve demo reliability or clarity.

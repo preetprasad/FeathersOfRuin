@@ -260,7 +260,9 @@ Controlled adjustments: source identity and airflow calibration
 
 The decision remains provisional because the salvaged source covers only 50 hours, including 40 historically stable rows. Passing this retrospective gate does not prove future reliability. A live deployment would continue checking freshness, drift, completeness, frozen values, calibration error, and agreement with independent measurements.
 
-The implementation also contains a negative automated test: if the salvaged source loses an entire numeric channel, completeness and calibration fail and the gate returns **Reject**.
+The trust gate is fail-closed. Automated edge-case tests prove that it returns **Reject** when the source is absent, loses an entire numeric channel, contains a timestamp gap or duplicate, includes even one physically impossible reading, or freezes any channel for four consecutive readings. Coverage, cadence, completeness, and range screening must each be 100%; the calibration check also fails unless at least 24 stable rows support a corrected airflow mean absolute error no greater than `0.05 m³/s`.
+
+The detector also resists false escalation: a listener sound by itself remains a **Watch**, and pressure-plus-flow trends without an independent sound or vibration signal cannot become a confirmed water warning. These rules preserve the cross-signal corroboration principle at the edges, not only on the supplied happy path.
 
 ### Calculated incident timeline
 
@@ -397,7 +399,7 @@ npm test
 npx next build
 ```
 
-The test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, server rendering, audit evidence and AI provenance capture, resolution integrity, malformed local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. The dashboard exposes provider readiness and the resulting trust contract with schema, citation, approved-action, and advisory-only indicators.
+The 31-test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, server rendering, audit evidence and AI provenance capture, immutable first resolution, malformed and oversized local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. Trust-gate edge cases include absent sources, missing channels, timestamp gaps and duplicates, impossible readings, and frozen sensors; detector edge cases include sound-only reports and uncorroborated pressure-and-flow trends.
 
 ## Implementation warning
 

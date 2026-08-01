@@ -606,28 +606,28 @@ export function analyzeSensorTrust(rows: SensorRow[], source = "barry_j_smart_se
     {
       id: "coverage",
       label: "Coverage complete",
-      status: coverage >= 0.95 ? "pass" : "fail",
+      status: coverage === 1 ? "pass" : "fail",
       value: `${sourceRows.length}/${expectedRows} hours`,
       detail: "Observed rows are compared with every expected hourly position between the first and last reading.",
     },
     {
       id: "cadence",
       label: "Cadence consistent",
-      status: cadence >= 0.95 ? "pass" : "fail",
+      status: cadence === 1 ? "pass" : "fail",
       value: `${hourlyIntervals}/${cadenceIntervals.length} hourly gaps`,
       detail: "Consecutive timestamps should remain on the documented one-hour sampling interval.",
     },
     {
       id: "completeness",
       label: "Numeric fields complete",
-      status: completeness >= 0.98 ? "pass" : "fail",
+      status: completeness === 1 ? "pass" : "fail",
       value: `${presentNumericValues}/${expectedNumericValues} values`,
       detail: "Power, airflow, water, temperature, and vibration fields are checked independently.",
     },
     {
       id: "range",
       label: "Ranges plausible",
-      status: plausibleRange >= 0.99 ? "pass" : "fail",
+      status: plausibleRange === 1 ? "pass" : "fail",
       value: `${inRangeValues}/${rangeValues.length} values`,
       detail: "Readings must remain inside broad physical screening bounds before they reach the detector.",
     },
@@ -641,7 +641,9 @@ export function analyzeSensorTrust(rows: SensorRow[], source = "barry_j_smart_se
     {
       id: "calibration",
       label: "Airflow bias corrected",
-      status: stableRows.length >= 24 && correctedResidualMae <= 0.05 ? "adjusted" : "fail",
+      status: stableRows.length >= 24 && correctedResidualMae <= 0.05
+        ? Math.abs(rawAirflowOffset) >= 0.05 ? "adjusted" : "pass"
+        : "fail",
       value: `${rawAirflowOffset >= 0 ? "+" : ""}${rawAirflowOffset.toFixed(3)} → ${correctedResidualMean >= 0 ? "+" : ""}${correctedResidualMean.toFixed(3)} m³/s`,
       detail: "Healthy airflow residual is compared before and after the source-specific calibration correction.",
     },
