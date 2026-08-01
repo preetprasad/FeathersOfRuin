@@ -26,6 +26,18 @@
 - [Side-quest board](https://ultimate-hackathon.vercel.app/side-quests)
 - [Event datasets](https://drive.google.com/drive/folders/1PhiIBZ-ngRpJv91hGCu_9vg9zpwcYfbp?usp=sharing)
 
+## Location workspaces
+
+Each challenge location has its own workspace and README so its research, datasets, experiments, application code, and decisions can evolve independently.
+
+| Location | Theme | Workspace |
+|---|---|---|
+| Sunken Garden & CS Building | Trust and misinformation | [Open location README](locations/sunken-garden-and-cs-building/README.md) |
+| Matilda Bay | Resource allocation and inequity | [Open location README](locations/matilda-bay/README.md) |
+| **Reid Library — active** | Infrastructure monitoring | [Open location README](locations/reid-library/README.md) |
+
+The root README remains the event-wide reference. Put location-specific implementation notes and files inside the appropriate directory.
+
 ## The premise
 
 Two years ago, the peacocks around UWA's Arts Building combined into a Giant Peacock. Its feathers tore through buildings, communications, transport routes, and essential infrastructure across Crawley campus. Three survivor factions established recovery hubs:
