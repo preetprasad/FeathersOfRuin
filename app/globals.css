@@ -840,6 +840,120 @@ button {
   margin-top: 20px;
 }
 
+.sensitivity-panel {
+  margin-top: 20px;
+}
+
+.sensitivity-heading {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(320px, 1.2fr);
+  gap: 28px;
+  align-items: end;
+}
+
+.sensitivity-heading h2 {
+  margin: 6px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(25px, 3vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.sensitivity-heading p,
+.sensitivity-note {
+  margin: 0;
+  color: var(--paper-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.sensitivity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.sensitivity-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--ink-soft);
+}
+
+.sensitivity-card.active {
+  border-color: rgb(158 231 192 / 0.46);
+  background: linear-gradient(145deg, rgb(158 231 192 / 0.08), var(--ink-soft) 65%);
+  box-shadow: inset 0 1px 0 rgb(158 231 192 / 0.12);
+}
+
+.sensitivity-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sensitivity-card-heading strong {
+  font-size: 14px;
+}
+
+.sensitivity-card-heading span {
+  color: var(--mint);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+}
+
+.sensitivity-card > p {
+  min-height: 48px;
+  margin: 9px 0 14px;
+  color: var(--paper-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.sensitivity-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--line);
+}
+
+.sensitivity-card dl div {
+  padding: 10px;
+  background: rgb(16 23 21 / 0.72);
+}
+
+.sensitivity-card dt {
+  color: var(--paper-muted);
+  font-size: 8px;
+}
+
+.sensitivity-card dd {
+  margin: 4px 0 0;
+  color: var(--paper);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 16px;
+}
+
+.threshold-envelope {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  color: var(--blue);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.sensitivity-note {
+  margin-top: 14px;
+}
+
 .validation-panel h2,
 .operator-panel h2 {
   margin: 6px 0 8px;
@@ -963,7 +1077,12 @@ button {
 
   .validation-panel,
   .operator-panel,
-  .timeline-heading {
+  .timeline-heading,
+  .sensitivity-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .sensitivity-grid {
     grid-template-columns: 1fr;
   }
 

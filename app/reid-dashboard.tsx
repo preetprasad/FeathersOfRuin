@@ -5,6 +5,7 @@ import sensorData from "../locations/reid-library/data/processed/reid_library_se
 import { ACTION_CATALOG, presentIncidentBrief, type BriefingRequest, type IncidentBrief } from "../lib/reid-briefing";
 import {
   airflowResidual,
+  analyzeDetectorSensitivity,
   backtestDetector,
   buildIncidentTimeline,
   detectEpisodes,
@@ -183,11 +184,66 @@ function IncidentTimeline({ milestones, kind }: { milestones: IncidentMilestone[
   );
 }
 
+function SensitivityPanel({ profiles }: { profiles: ReturnType<typeof analyzeDetectorSensitivity> }) {
+  const conservative = profiles.find((profile) => profile.id === "conservative")!;
+  const balanced = profiles.find((profile) => profile.id === "balanced")!;
+  const sensitive = profiles.find((profile) => profile.id === "sensitive")!;
+  const conservativeDelay = Math.max(...balanced.confirmedLeadHours.map((hours, index) =>
+    hours - (conservative.confirmedLeadHours[index] ?? hours)));
+  const sameSensitiveLead = sensitive.confirmedLeadHours.every((hours, index) => hours === balanced.confirmedLeadHours[index]);
+
+  function leadRange(hours: number[]) {
+    const low = Math.min(...hours);
+    const high = Math.max(...hours);
+    return low === high ? `${low}h` : `${low}–${high}h`;
+  }
+
+  return (
+    <section className="panel sensitivity-panel">
+      <div className="sensitivity-heading">
+        <div>
+          <span className="eyebrow">Threshold sensitivity · all 500 records</span>
+          <h2>Why balanced stays active</h2>
+        </div>
+        <p>
+          Conservative rules delay confirmed warning by up to {conservativeDelay} hours. The sensitive profile
+          {sameSensitiveLead ? " adds no lead time" : " changes lead time"} and produces {sensitive.confirmedFalseAlertHours} false alert-hours.
+        </p>
+      </div>
+      <div className="sensitivity-grid">
+        {profiles.map((profile) => (
+          <article className={`sensitivity-card ${profile.id === "balanced" ? "active" : ""}`} key={profile.id}>
+            <div className="sensitivity-card-heading">
+              <strong>{profile.label}</strong>
+              <span>{profile.detectedFailureEvents}/2 failures</span>
+            </div>
+            <p>{profile.description}</p>
+            <dl>
+              <div><dt>Confirmed lead</dt><dd>{leadRange(profile.confirmedLeadHours)}</dd></div>
+              <div><dt>Confirmed coverage</dt><dd>{Math.round(profile.confirmedUnsafeRecall * 100)}%</dd></div>
+              <div><dt>Alert-hours</dt><dd>{profile.confirmedAlertHours}</dd></div>
+              <div><dt>False alert-hours</dt><dd>{profile.confirmedFalseAlertHours}</dd></div>
+            </dl>
+            <div className="threshold-envelope">
+              <span>3h water drop ≥ {profile.thresholds.pressureDrop3h} kPa / {profile.thresholds.flowDrop3h.toFixed(2)} L/s</span>
+              <span>Water band &lt; {profile.thresholds.waterWarningPressure} kPa / {profile.thresholds.waterWarningFlow.toFixed(2)} L/s</span>
+              <span>Critical &lt; {profile.thresholds.criticalPressure} kPa / {profile.thresholds.criticalFlow.toFixed(2)} L/s</span>
+              <span>Residual ≤ {profile.thresholds.airflowResidual.toFixed(2)} · vibration ≥ {profile.thresholds.vibration.toFixed(2)}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+      <p className="sensitivity-note">Profiles change warning and critical thresholds; the recorded-failure boundary stays fixed. Supplied <code>system_status</code> labels are read afterward to calculate these results.</p>
+    </section>
+  );
+}
+
 export function ReidDashboard() {
   const allRows = useMemo(() => prepareSensorData(sensorData as RawSensorRecord[]), []);
   const allDetections = useMemo(() => runDetector(allRows), [allRows]);
   const episodes = useMemo(() => detectEpisodes(allDetections), [allDetections]);
   const backtest = useMemo(() => backtestDetector(allRows, allDetections), [allRows, allDetections]);
+  const sensitivityProfiles = useMemo(() => analyzeDetectorSensitivity(allRows), [allRows]);
   const [episodeId, setEpisodeId] = useState<string | null>(null);
   const [metricGroup, setMetricGroup] = useState<MetricGroup>("water");
   const [aiBrief, setAiBrief] = useState<IncidentBrief | null>(null);
@@ -490,6 +546,8 @@ export function ReidDashboard() {
                 <div><strong>{backtest.falsePositive}</strong><span>missing-data watches</span></div>
               </div>
             </section>
+
+            <SensitivityPanel profiles={sensitivityProfiles} />
 
             <section className="panel operator-panel">
               <div>

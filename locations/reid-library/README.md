@@ -178,6 +178,7 @@ Current capabilities:
 - Traces every detector signal to the relevant recovered Cloudy note
 - Backtests the detector over all 500 records and displays measured performance
 - Builds an incident-specific timeline from detector timestamps, showing watch, corroborated warning, critical threshold, and recorded failure with exact lead times
+- Compares conservative, balanced, and sensitive threshold profiles over all 500 records so the active thresholds are justified by measured lead time, coverage, and false-alert load
 - Sends a schema-validated evidence object to a live LLM and requires structured, cited output
 - Uses a token-protected 4Freshers Ollama bridge as the primary model in the public demo
 - Fails over to Claude Haiku when Ollama is unavailable, then to validated deterministic decision support if every model is unavailable
@@ -221,6 +222,30 @@ The first three milestones are labelled as transparent detector output. The fina
 | Ventilation warning | Airflow residual at or below −0.55 m³/s with vibration at or above 0.25 | Cloudy notes 2 and 3 |
 
 Thresholds are intentionally visible and testable. `system_status` is used only to calculate backtest results after detection.
+
+### Threshold sensitivity analysis
+
+The dashboard reruns the transparent detector across all 500 supplied records with three complete threshold profiles. This is not an LLM judgement: each result is calculated from detector timestamps and evaluated against `system_status` only after detection.
+
+| Profile | Confirmed lead before failures | Recorded failures detected | Confirmed unsafe-hour coverage | Confirmed alert-hours | False confirmed alert-hours |
+|---|---:|---:|---:|---:|---:|
+| Conservative | 21 h and 17 h | 2 of 2 | 90.15% | 119 | 0 |
+| **Balanced — active** | **23 h and 21 h** | **2 of 2** | **96.21%** | **127** | **0** |
+| Sensitive | 23 h and 21 h | 2 of 2 | 96.21% | 129 | 2 |
+
+The balanced profile remains active because it confirms both failures two to four hours earlier than the conservative profile without producing any false confirmed alert-hours. The sensitive profile produces the same failure lead times and unsafe-hour coverage as balanced, but adds two false alert-hours. On this dataset, lowering the thresholds further therefore adds alert load without improving warning time.
+
+The tested early-warning profile envelopes are:
+
+| Profile | 3-hour pressure drop | 3-hour flow drop | Airflow residual | Vibration corroboration |
+|---|---:|---:|---:|---:|
+| Conservative | 35 kPa | 0.18 L/s | −0.70 m³/s | 0.30 |
+| **Balanced — active** | **25 kPa** | **0.12 L/s** | **−0.55 m³/s** | **0.25** |
+| Sensitive | 18 kPa | 0.08 L/s | −0.40 m³/s | 0.18 |
+
+The interface also exposes each profile's water warning band and critical boundary. The recorded-failure boundary stays fixed at 100 kPa and 0.35 L/s so the experiment varies advance warning rather than redefining failure.
+
+These measurements describe only the supplied historical dataset. They support an explainable hackathon configuration, not a claim that the selected thresholds are already validated for a real building. A production deployment would require prospective monitoring, reviewed false positives, sensor-specific calibration, and controlled threshold revision.
 
 ### Live AI contract
 

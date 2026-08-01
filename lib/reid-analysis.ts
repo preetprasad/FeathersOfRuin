@@ -67,6 +67,72 @@ export type IncidentMilestone = {
   source: "detector" | "evaluation";
 };
 
+export type DetectorThresholds = {
+  pressureDrop3h: number;
+  flowDrop3h: number;
+  waterWarningPressure: number;
+  waterWarningFlow: number;
+  criticalPressure: number;
+  criticalFlow: number;
+  failedPressure: number;
+  failedFlow: number;
+  airflowResidual: number;
+  vibration: number;
+};
+
+export const DETECTOR_PROFILES = {
+  conservative: {
+    label: "Conservative",
+    description: "Requires larger deviations, reducing alert hours but shortening preparation time.",
+    thresholds: {
+      pressureDrop3h: 35,
+      flowDrop3h: 0.18,
+      waterWarningPressure: 300,
+      waterWarningFlow: 1.8,
+      criticalPressure: 220,
+      criticalFlow: 1.4,
+      failedPressure: 100,
+      failedFlow: 0.35,
+      airflowResidual: -0.7,
+      vibration: 0.3,
+    },
+  },
+  balanced: {
+    label: "Balanced · active",
+    description: "The deployed transparent rule set, balancing advance warning with alert burden.",
+    thresholds: {
+      pressureDrop3h: 25,
+      flowDrop3h: 0.12,
+      waterWarningPressure: 320,
+      waterWarningFlow: 1.95,
+      criticalPressure: 250,
+      criticalFlow: 1.6,
+      failedPressure: 100,
+      failedFlow: 0.35,
+      airflowResidual: -0.55,
+      vibration: 0.25,
+    },
+  },
+  sensitive: {
+    label: "Sensitive",
+    description: "Accepts smaller deviations, testing whether earlier warnings justify extra operator review.",
+    thresholds: {
+      pressureDrop3h: 18,
+      flowDrop3h: 0.08,
+      waterWarningPressure: 330,
+      waterWarningFlow: 2,
+      criticalPressure: 275,
+      criticalFlow: 1.75,
+      failedPressure: 100,
+      failedFlow: 0.35,
+      airflowResidual: -0.4,
+      vibration: 0.18,
+    },
+  },
+} as const satisfies Record<string, { label: string; description: string; thresholds: DetectorThresholds }>;
+
+export type DetectorProfileId = keyof typeof DETECTOR_PROFILES;
+
 export const CLOUDY_NOTES = [
   { id: 1, title: "The pipes are getting old", hypothesis: "Pressure and flow deterioration can precede valve failure." },
   { id: 2, title: "The library has a rhythm", hypothesis: "Sound and vibration should corroborate sensor warnings." },
@@ -106,7 +172,11 @@ function difference(current: number | null, previous: number | null) {
   return current === null || previous === null ? null : previous - current;
 }
 
-export function detectRow(rows: SensorRow[], index: number): Detection {
+export function detectRow(
+  rows: SensorRow[],
+  index: number,
+  thresholds: DetectorThresholds = DETECTOR_PROFILES.balanced.thresholds,
+): Detection {
   const row = rows[index];
   const previous = rows[Math.max(0, index - 3)];
   const pressureDrop3h = difference(row.pressure, previous.pressure);
@@ -126,16 +196,16 @@ export function detectRow(rows: SensorRow[], index: number): Detection {
       cloudyNote: 2,
     });
   }
-  if (pressureDrop3h !== null && pressureDrop3h >= 25) {
+  if (pressureDrop3h !== null && pressureDrop3h >= thresholds.pressureDrop3h) {
     signals.push({
       id: "pressure-trend",
       label: "Water pressure falling",
       value: `${pressureDrop3h.toFixed(0)} kPa / 3h`,
-      explanation: "The three-hour pressure decline exceeds the transparent 25 kPa warning threshold.",
+      explanation: `The three-hour pressure decline exceeds the transparent ${thresholds.pressureDrop3h} kPa warning threshold.`,
       cloudyNote: 1,
     });
   }
-  if (flowDrop3h !== null && flowDrop3h >= 0.12) {
+  if (flowDrop3h !== null && flowDrop3h >= thresholds.flowDrop3h) {
     signals.push({
       id: "flow-trend",
       label: "Water flow weakening",
@@ -144,7 +214,7 @@ export function detectRow(rows: SensorRow[], index: number): Detection {
       cloudyNote: 1,
     });
   }
-  if (residual !== null && residual <= -0.55) {
+  if (residual !== null && residual <= thresholds.airflowResidual) {
     signals.push({
       id: "airflow-efficiency",
       label: "Airflow below expected output",
@@ -153,12 +223,12 @@ export function detectRow(rows: SensorRow[], index: number): Detection {
       cloudyNote: 3,
     });
   }
-  if (row.vibration !== null && row.vibration >= 0.25) {
+  if (row.vibration !== null && row.vibration >= thresholds.vibration) {
     signals.push({
       id: "mechanical-vibration",
       label: "Mechanical vibration elevated",
       value: row.vibration.toFixed(2),
-      explanation: "Vibration is above the 0.25 corroboration threshold.",
+      explanation: `Vibration is above the ${thresholds.vibration.toFixed(2)} corroboration threshold.`,
       cloudyNote: 2,
     });
   }
@@ -174,16 +244,16 @@ export function detectRow(rows: SensorRow[], index: number): Detection {
 
   let level: AlertLevel = "safe";
   let kind: IncidentKind = "general";
-  const waterFailed = row.pressure !== null && row.flow !== null && row.pressure <= 100 && row.flow <= 0.35;
-  const waterCritical = row.pressure !== null && row.flow !== null && row.pressure < 250 && row.flow < 1.6;
+  const waterFailed = row.pressure !== null && row.flow !== null && row.pressure <= thresholds.failedPressure && row.flow <= thresholds.failedFlow;
+  const waterCritical = row.pressure !== null && row.flow !== null && row.pressure < thresholds.criticalPressure && row.flow < thresholds.criticalFlow;
   const waterWarning =
     (pressureDrop3h !== null &&
       flowDrop3h !== null &&
-      pressureDrop3h >= 25 &&
-      flowDrop3h >= 0.12 &&
-      (row.sound !== "normal" || (row.vibration ?? 0) >= 0.25)) ||
-    (row.pressure !== null && row.flow !== null && row.pressure < 320 && row.flow < 1.95 && row.sound !== "normal");
-  const ventilationWarning = residual !== null && residual <= -0.55 && (row.vibration ?? 0) >= 0.25;
+      pressureDrop3h >= thresholds.pressureDrop3h &&
+      flowDrop3h >= thresholds.flowDrop3h &&
+      (row.sound !== "normal" || (row.vibration ?? 0) >= thresholds.vibration)) ||
+    (row.pressure !== null && row.flow !== null && row.pressure < thresholds.waterWarningPressure && row.flow < thresholds.waterWarningFlow && row.sound !== "normal");
+  const ventilationWarning = residual !== null && residual <= thresholds.airflowResidual && (row.vibration ?? 0) >= thresholds.vibration;
 
   if (waterFailed) {
     level = "failed";
@@ -204,8 +274,8 @@ export function detectRow(rows: SensorRow[], index: number): Detection {
   return { timestamp: row.timestamp, level, kind, signals, pressureDrop3h, flowDrop3h, airflowResidual: residual };
 }
 
-export function runDetector(rows: SensorRow[]) {
-  return rows.map((_, index) => detectRow(rows, index));
+export function runDetector(rows: SensorRow[], thresholds: DetectorThresholds = DETECTOR_PROFILES.balanced.thresholds) {
+  return rows.map((_, index) => detectRow(rows, index, thresholds));
 }
 
 function highestLevel(detections: Detection[]) {
@@ -385,6 +455,29 @@ export function backtestDetector(rows: SensorRow[], detections = runDetector(row
     confirmedLeadHours,
     detectedFailureEvents: failureLeadHours.length,
   };
+}
+
+export function analyzeDetectorSensitivity(rows: SensorRow[]) {
+  return (Object.entries(DETECTOR_PROFILES) as Array<[DetectorProfileId, typeof DETECTOR_PROFILES[DetectorProfileId]]>)
+    .map(([id, profile]) => {
+      const detections = runDetector(rows, profile.thresholds);
+      const backtest = backtestDetector(rows, detections);
+      const confirmed = detections.map((item) => LEVEL_RANK[item.level] >= LEVEL_RANK.warning);
+      const unsafeHours = rows.filter((row) => row.status !== "stable").length;
+      const confirmedUnsafeHours = rows.filter((row, index) => row.status !== "stable" && confirmed[index]).length;
+      const confirmedFalseAlertHours = rows.filter((row, index) => row.status === "stable" && confirmed[index]).length;
+      return {
+        id,
+        label: profile.label,
+        description: profile.description,
+        thresholds: profile.thresholds,
+        detectedFailureEvents: backtest.confirmedLeadHours.length,
+        confirmedLeadHours: backtest.confirmedLeadHours,
+        confirmedAlertHours: confirmed.filter(Boolean).length,
+        confirmedFalseAlertHours,
+        confirmedUnsafeRecall: confirmedUnsafeHours / Math.max(unsafeHours, 1),
+      };
+    });
 }
 
 export function uniqueEvidence(detections: Detection[]) {

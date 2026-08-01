@@ -3,6 +3,7 @@ import test from "node:test";
 import sensorData from "../locations/reid-library/data/processed/reid_library_sensor_data.json";
 import {
   backtestDetector,
+  analyzeDetectorSensitivity,
   buildIncidentTimeline,
   detectEpisodes,
   prepareSensorData,
@@ -66,4 +67,15 @@ test("shows ventilation warning onset, worst efficiency, and recovery", () => {
   assert.ok(timelines.every((timeline) => timeline[0].label === "Efficiency warning"));
   assert.ok(timelines.every((timeline) => timeline.some((item) => item.label === "Lowest efficiency")));
   assert.ok(timelines.every((timeline) => timeline.at(-1)?.label === "Warning cleared"));
+});
+
+test("calculates the lead-time and alert-load trade-off for all threshold profiles", () => {
+  const profiles = analyzeDetectorSensitivity(rows);
+  assert.deepEqual(profiles.map((profile) => profile.id), ["conservative", "balanced", "sensitive"]);
+  assert.deepEqual(profiles.map((profile) => profile.detectedFailureEvents), [2, 2, 2]);
+  assert.deepEqual(profiles.map((profile) => profile.confirmedLeadHours), [[21, 17], [23, 21], [23, 21]]);
+  assert.deepEqual(profiles.map((profile) => profile.confirmedAlertHours), [119, 127, 129]);
+  assert.deepEqual(profiles.map((profile) => profile.confirmedFalseAlertHours), [0, 0, 2]);
+  assert.ok(profiles[0].confirmedUnsafeRecall < profiles[1].confirmedUnsafeRecall);
+  assert.equal(profiles[1].confirmedUnsafeRecall, profiles[2].confirmedUnsafeRecall);
 });
