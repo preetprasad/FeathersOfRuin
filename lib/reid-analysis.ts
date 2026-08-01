@@ -84,6 +84,14 @@ export type SensorTrustCheck = {
   detail: string;
 };
 
+export type SensorTrustScenarioId =
+  | "baseline"
+  | "missing-value"
+  | "duplicate-time"
+  | "impossible-value"
+  | "frozen-channel"
+  | "unstable-drift";
+
 export type DetectorThresholds = {
   pressureDrop3h: number;
   flowDrop3h: number;
@@ -556,6 +564,36 @@ function longestRepeatedRun(values: Array<number | null>) {
     longest = Math.max(longest, current);
   }
   return longest;
+}
+
+export function applySensorTrustScenario(
+  rows: SensorRow[],
+  scenario: SensorTrustScenarioId,
+  source = "barry_j_smart_sensor",
+) {
+  if (scenario === "baseline") return rows;
+
+  const sourceRows = rows.filter((row) => row.source === source);
+  const target = sourceRows[10];
+  const previous = sourceRows[9];
+  let sourceIndex = 0;
+
+  return rows.map((row) => {
+    if (row.source !== source) return row;
+    const index = sourceIndex;
+    sourceIndex += 1;
+
+    if (scenario === "missing-value" && index === 10) return { ...row, airflow: null };
+    if (scenario === "duplicate-time" && row === target && previous) {
+      return { ...row, timestamp: new Date(previous.timestamp) };
+    }
+    if (scenario === "impossible-value" && index === 10) return { ...row, pressure: 900 };
+    if (scenario === "frozen-channel" && index < 4) return { ...row, temperature: 20 };
+    if (scenario === "unstable-drift" && row.airflow !== null) {
+      return { ...row, airflow: row.airflow + (index % 2 === 0 ? 0.25 : -0.25) };
+    }
+    return row;
+  });
 }
 
 export function analyzeSensorTrust(rows: SensorRow[], source = "barry_j_smart_sensor") {

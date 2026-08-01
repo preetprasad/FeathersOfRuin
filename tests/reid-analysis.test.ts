@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import sensorData from "../locations/reid-library/data/processed/reid_library_sensor_data.json";
 import {
+  applySensorTrustScenario,
   backtestDetector,
   analyzeDetectorSensitivity,
   analyzeSensorTrust,
@@ -209,4 +210,23 @@ test("does not confirm a water warning when trend signals lack independent corro
   assert.notEqual(result.level, "critical");
   assert.ok(result.signals.some((signal) => signal.id === "pressure-trend"));
   assert.ok(result.signals.some((signal) => signal.id === "flow-trend"));
+});
+
+test("drives every interactive trust stress scenario from the same fail-closed analysis", () => {
+  const expectedFailureGate = {
+    "missing-value": "completeness",
+    "duplicate-time": "cadence",
+    "impossible-value": "range",
+    "frozen-channel": "frozen",
+    "unstable-drift": "calibration",
+  } as const;
+
+  const baseline = analyzeSensorTrust(applySensorTrustScenario(rows, "baseline"));
+  assert.equal(baseline.decision, "admit-with-calibration");
+
+  for (const [scenario, gate] of Object.entries(expectedFailureGate)) {
+    const report = analyzeSensorTrust(applySensorTrustScenario(rows, scenario as keyof typeof expectedFailureGate));
+    assert.equal(report.decision, "reject", `${scenario} should reject the source`);
+    assert.equal(report.checks.find((check) => check.id === gate)?.status, "fail");
+  }
 });

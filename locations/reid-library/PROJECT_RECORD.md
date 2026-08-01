@@ -62,6 +62,8 @@ This document is the durable record of the decisions, pivots, rationale, action 
 | Add a presentation-ready method component | A side-quest hint said to explain the analysis method and visualise its result | The interface shows a five-stage pipeline and a calculated mean 24-hour signature across both failures |
 | Integrate the salvaged-sensor thread as a trust gate, not a second main scope | The Barry J source already contributes evidence to the selected early-warning workflow; its quality should be justified before use | Seven calculated gates now produce a provisional admit-with-calibration or reject decision |
 | Make the sensor trust gate fail closed at row-level edges | Safety evidence cannot tolerate a single missing interval, impossible value, duplicate timestamp, or frozen run being hidden by a high aggregate percentage | Coverage, cadence, completeness, and range must be exact; calibration requires at least 24 stable rows and corrected residual MAE no greater than `0.05 m³/s` |
+| Keep the selected failure-warning thread visually dominant | The live hackathon page says to choose one thread, while the salvaged sensor is a separate Reid thread | A cross-failure replay now proves the main warning result; the interactive sensor stress test is explicitly framed as an input-quality support layer |
+| Make AI grounding inspectable on screen | A citation count proves validation but does not help a judge inspect what the model actually used | Each accepted citation now resolves to the detector signal, label, and measured value and links back to its source row in the evidence panel |
 
 ### AI architecture
 
@@ -180,7 +182,7 @@ The model is downstream of the detector. Model failure does not remove sensor ev
 | Barry J airflow residual | `+0.150 m³/s` raw → approximately `0.000 m³/s` corrected |
 | Corrected Barry J residual MAE | Approximately `0.0003 m³/s` |
 | Sensor gate decision | Admit with calibration · provisional |
-| Automated tests | 31 passing |
+| Automated tests | 32 passing |
 
 These are retrospective results on the event dataset. They are not a production safety certification.
 
@@ -240,10 +242,10 @@ These are retrospective results on the event dataset. They are not a production 
 - [ ] Start Ollama, the token-protected proxy, and ngrok; keep the Mac awake and connected to power.
 - [ ] Confirm the current tunnel URL matches the production `OLLAMA_REMOTE_URL` value.
 - [ ] Open `/api/briefing/health` and confirm Ollama is available and Claude is on standby.
-- [ ] Run the complete automated suite and verify all 31 tests pass.
+- [ ] Run the complete automated suite and verify all 32 tests pass.
 - [ ] Test the public Vercel URL in a private browser window with no existing session.
 - [ ] Generate one live briefing for a water incident and one for ventilation.
-- [ ] Show the Sensor Trust Gate, its measured `+0.150 m³/s` correction, provisional admission, and fail-closed edge tests for absent, incomplete, irregular, impossible, and frozen data.
+- [ ] Replay both recorded failures, then show the Sensor Trust Gate baseline and at least two reject scenarios without presenting the salvaged sensor as a second selected thread.
 - [ ] Demonstrate one operator decision, resolution note, and JSON export.
 - [ ] Prepare backup screenshots or a short recording in case venue networking fails.
 - [ ] Freeze features after rehearsal; accept only fixes that improve demo reliability or clarity.
@@ -255,7 +257,7 @@ These are retrospective results on the event dataset. They are not a production 
 3. **Method, 45 seconds:** Show Clean → Baseline → Features → Corroborate → Backtest.
 4. **Result, 30 seconds:** Point to the averaged failure signature and the 21–23 hour confirmed lead.
 5. **Explainability, 30 seconds:** Open a water incident, its signals, Cloudy-note citations, and calculated timeline.
-6. **AI, 30 seconds:** Generate the structured brief and point out verified citations, approved actions, uncertainty, and provider status.
+6. **AI, 30 seconds:** Generate the structured brief, open one evidence-ledger citation, and point out approved actions, uncertainty, and provider status.
 7. **Human control, 20 seconds:** Record and resolve an operator response, then show the export.
 8. **Close, 15 seconds:** “Failure had a shape. Now the dragons can see it coming.”
 

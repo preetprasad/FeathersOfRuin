@@ -21,8 +21,8 @@
 | Selected thread | **Two failures, no warning** |
 | Product | **Reid Sentinel** |
 | Delivery state | Implemented, tested, documented, pushed, and deployed |
-| Automated checks | 31 passing tests plus lint and production build |
-| Supporting Reid modules | Cloudy-note evidence, listener corroboration, and salvaged-sensor trust gate |
+| Automated checks | 32 passing tests plus lint and production build |
+| Supporting Reid modules | Cross-failure replay, Cloudy-note corroboration, interactive sensor stress testing, and cited AI evidence ledger |
 | Public demo | [reid-sentinel.vercel.app](https://reid-sentinel.vercel.app/) |
 | Complete project history | [Decisions, pivots, risks, takeaways, and action plan](locations/reid-library/PROJECT_RECORD.md) |
 

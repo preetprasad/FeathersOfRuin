@@ -172,12 +172,14 @@ Current capabilities:
 
 - Opens with a skippable cinematic campus sequence that zooms from the UWA field map into Reid Library, visualises the feather strike and infrastructure failure, introduces Cloudy, and hands off to the evidence console
 - Presents the complete five-stage analysis method beside a calculated 24-hour signature averaged across both recorded failures
+- Replays both recorded water failures side by side, exposing the calculated listener-watch, corroborated-warning, critical, and failure timestamps
 - Loads all 500 event records from the checked-in CSV
 - Normalises the truncated `barry_j_` sensor identity
 - Automatically discovers two failures and two ventilation warnings instead of relying on hard-coded incident windows
 - Switches between water, ventilation, and shelter signal views
 - Calculates the healthy power-to-airflow relationship and corrects the known Barry J airflow offset
 - Runs the salvaged Barry J source through an explicit trust gate covering identity, coverage, cadence, completeness, physical ranges, frozen channels, and post-calibration agreement
+- Lets judges stress that same production trust function with missing, duplicated, impossible, frozen, and unstable-drift scenarios without changing the historical archive
 - Surfaces water decline, vibration, listener observations, missing values, and temperature consequence
 - Keeps `system_status` as an evaluation ribbon rather than using it as detector input
 - Traces every detector signal to the relevant recovered Cloudy note
@@ -185,6 +187,7 @@ Current capabilities:
 - Builds an incident-specific timeline from detector timestamps, showing watch, corroborated warning, critical threshold, and recorded failure with exact lead times
 - Compares conservative, balanced, and sensitive threshold profiles over all 500 records so the active thresholds are justified by measured lead time, coverage, and false-alert load
 - Sends a schema-validated evidence object to a live LLM and requires structured, cited output
+- Resolves every verified AI citation back to its detector label and measured value in a clickable on-screen evidence ledger
 - Uses a token-protected 4Freshers Ollama bridge as the primary model in the public demo
 - Fails over to Claude Haiku when Ollama is unavailable, then to validated deterministic decision support if every model is unavailable
 - Displays live primary, hosted-secondary, and guaranteed-fallback readiness in the dashboard
@@ -399,7 +402,7 @@ npm test
 npx next build
 ```
 
-The 31-test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, server rendering, audit evidence and AI provenance capture, immutable first resolution, malformed and oversized local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. Trust-gate edge cases include absent sources, missing channels, timestamp gaps and duplicates, impossible readings, and frozen sensors; detector edge cases include sound-only reports and uncorroborated pressure-and-flow trends.
+The 32-test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, server rendering, audit evidence and AI provenance capture, immutable first resolution, malformed and oversized local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. Trust-gate edge cases include absent sources, missing channels, timestamp gaps and duplicates, impossible readings, frozen sensors, and unstable calibration drift; the interactive stress controls are verified against the same fail-closed analysis used by the baseline gate. Detector edge cases include sound-only reports and uncorroborated pressure-and-flow trends.
 
 ## Implementation warning
 

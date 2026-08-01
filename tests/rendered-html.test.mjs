@@ -83,6 +83,12 @@ test("keeps the evidence source and starter preview out of the finished product"
   assert.match(dashboard, /Salvaged sensor/);
   assert.match(dashboard, /Trust it only after the evidence clears/);
   assert.match(dashboard, /Airflow residual/);
+  assert.match(dashboard, /Cross-incident replay/);
+  assert.match(dashboard, /same warning sequence appeared twice/i);
+  assert.match(dashboard, /Interactive evidence stress test/);
+  assert.match(dashboard, /Unstable drift/);
+  assert.match(dashboard, /Evidence used by this briefing/);
+  assert.match(dashboard, /Structured briefing/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton|drizzle/);
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });

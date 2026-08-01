@@ -15,6 +15,7 @@ import {
   type OperatorAuditEntry,
 } from "../lib/reid-audit";
 import {
+  applySensorTrustScenario,
   airflowResidual,
   analyzeDetectorSensitivity,
   analyzeSensorTrust,
@@ -28,14 +29,35 @@ import {
   type RawSensorRecord,
   type IncidentMilestone,
   type SensorRow,
+  type SensorTrustScenarioId,
 } from "../lib/reid-analysis";
 
 type MetricGroup = "water" | "ventilation" | "shelter";
+type FailureComparison = {
+  id: string;
+  label: string;
+  listenerLead: number | null;
+  warningLead: number | null;
+  criticalLead: number | null;
+};
 type ProviderHealth = {
   primary: { provider: string; status: "available" | "unavailable" };
   secondary: { provider: string; status: "standby" | "not-configured" };
   guaranteedFallback: { provider: string; status: "available" };
 };
+
+const trustScenarios: Array<{
+  id: SensorTrustScenarioId;
+  label: string;
+  description: string;
+}> = [
+  { id: "baseline", label: "Recovered data", description: "The 50-hour Barry J record as supplied, including its measurable constant airflow offset." },
+  { id: "missing-value", label: "Missing value", description: "Remove one airflow reading to prove that 99% completeness is not accepted." },
+  { id: "duplicate-time", label: "Duplicate time", description: "Repeat one timestamp, creating a duplicate followed by a two-hour gap." },
+  { id: "impossible-value", label: "Impossible value", description: "Inject a 900 kPa pressure reading outside the broad physical screening range." },
+  { id: "frozen-channel", label: "Frozen channel", description: "Hold temperature at exactly 20°C for four consecutive readings." },
+  { id: "unstable-drift", label: "Unstable drift", description: "Alternate airflow error by ±0.25 m³/s so a constant calibration cannot repair it." },
+];
 
 const INTRO_STORAGE_KEY = "reid-sentinel:intro-seen:v1";
 
@@ -336,9 +358,11 @@ function SensitivityPanel({ profiles }: { profiles: ReturnType<typeof analyzeDet
 function AnalysisMethodPanel({
   signature,
   confirmedLeadHours,
+  failureComparisons,
 }: {
   signature: ReturnType<typeof buildFailureSignature>;
   confirmedLeadHours: number[];
+  failureComparisons: FailureComparison[];
 }) {
   const width = 640;
   const height = 230;
@@ -429,11 +453,47 @@ function AnalysisMethodPanel({
           <div className="lead-result"><strong>{leadLow}–{leadHigh}h</strong><p>confirmed warning lead with the balanced detector</p></div>
         </div>
       </div>
+
+      <div className="failure-comparison">
+        <div className="failure-comparison-heading">
+          <div>
+            <span className="micro-label">Cross-incident replay · calculated timestamps</span>
+            <h3>The same warning sequence appeared twice</h3>
+          </div>
+          <p>One listener observation creates a watch. Pressure and flow deterioration plus independent vibration or sound evidence create a confirmed warning.</p>
+        </div>
+        <div className="corroboration-formula" aria-label="Warning corroboration rule">
+          <span>pressure decline</span><i>+</i><span>flow decline</span><i>+</i><span>sound or vibration</span><b>= confirmed warning</b>
+        </div>
+        <div className="failure-comparison-table" role="table" aria-label="Warning milestones before both recorded water failures">
+          <div className="failure-comparison-row header" role="row">
+            <span role="columnheader">Recorded event</span>
+            <span role="columnheader">Listener watch</span>
+            <span role="columnheader">Corroborated warning</span>
+            <span role="columnheader">Critical threshold</span>
+            <span role="columnheader">Failure</span>
+          </div>
+          {failureComparisons.map((item) => (
+            <div className="failure-comparison-row" role="row" key={item.id}>
+              <strong role="cell">{item.label}</strong>
+              <span role="cell">{item.listenerLead === null ? "—" : `T−${item.listenerLead}h`}</span>
+              <span className="warning-cell" role="cell">{item.warningLead === null ? "—" : `T−${item.warningLead}h`}</span>
+              <span className="critical-cell" role="cell">{item.criticalLead === null ? "—" : `T−${item.criticalLead}h`}</span>
+              <span className="failure-cell" role="cell">T0</span>
+            </div>
+          ))}
+        </div>
+        <p className="failure-comparison-conclusion"><strong>Observed result:</strong> the balanced detector confirms the repeated pattern 21–23 hours before both recorded failures, while the earliest listener watch appears at 24 hours.</p>
+      </div>
     </section>
   );
 }
 
-function SensorTrustGate({ report }: { report: ReturnType<typeof analyzeSensorTrust> }) {
+function SensorTrustGate({ rows }: { rows: SensorRow[] }) {
+  const [scenarioId, setScenarioId] = useState<SensorTrustScenarioId>("baseline");
+  const scenario = trustScenarios.find((item) => item.id === scenarioId) || trustScenarios[0];
+  const scenarioRows = useMemo(() => applySensorTrustScenario(rows, scenarioId), [rows, scenarioId]);
+  const report = useMemo(() => analyzeSensorTrust(scenarioRows), [scenarioRows]);
   const decisionLabel = report.decision === "admit-with-calibration"
     ? "Admit with calibration"
     : report.decision === "admit" ? "Admit" : "Reject";
@@ -451,11 +511,32 @@ function SensorTrustGate({ report }: { report: ReturnType<typeof analyzeSensorTr
           <h2>Trust it only after the evidence clears</h2>
           <p>Barry J readings are screened before they can support warnings. Passing this historical gate permits calibrated use; it does not remove the need for future drift monitoring.</p>
         </div>
-        <div className={`trust-decision ${report.decision === "reject" ? "rejected" : "admitted"}`}>
+        <div aria-live="polite" className={`trust-decision ${report.decision === "reject" ? "rejected" : "admitted"}`}>
           <span>{report.confidence} decision</span>
           <strong>{decisionLabel}</strong>
           <p>{report.passedGates}/{report.checks.length} gates cleared · {report.adjustedGates} controlled adjustments</p>
         </div>
+      </div>
+
+      <div className="trust-stress-test">
+        <div className="trust-stress-copy">
+          <span className="micro-label">Interactive evidence stress test</span>
+          <strong>{scenario.label}</strong>
+          <p>{scenario.description}</p>
+        </div>
+        <div className="trust-scenarios" aria-label="Sensor evidence scenario">
+          {trustScenarios.map((item) => (
+            <button
+              aria-pressed={item.id === scenarioId}
+              key={item.id}
+              onClick={() => setScenarioId(item.id)}
+              type="button"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <p className="stress-boundary">Demonstration only: each scenario mutates a temporary copy of the 50 salvaged rows. The historical archive and main early-warning detector remain unchanged.</p>
       </div>
 
       <div className="trust-evidence-grid">
@@ -514,7 +595,23 @@ export function ReidDashboard() {
   const backtest = useMemo(() => backtestDetector(allRows, allDetections), [allRows, allDetections]);
   const sensitivityProfiles = useMemo(() => analyzeDetectorSensitivity(allRows), [allRows]);
   const failureSignature = useMemo(() => buildFailureSignature(allRows), [allRows]);
-  const sensorTrust = useMemo(() => analyzeSensorTrust(allRows), [allRows]);
+  const failureComparisons = useMemo(() => episodes
+    .filter((item) => item.kind === "water")
+    .map((item) => {
+      const timeline = buildIncidentTimeline(item, allRows, allDetections);
+      const failure = timeline.find((milestone) => milestone.label === "Recorded failure")?.timestamp;
+      const leadFor = (label: string) => {
+        const timestamp = timeline.find((milestone) => milestone.label === label)?.timestamp;
+        return failure && timestamp ? Math.round((failure.getTime() - timestamp.getTime()) / 3_600_000) : null;
+      };
+      return {
+        id: item.id,
+        label: item.label,
+        listenerLead: leadFor("Listener watch"),
+        warningLead: leadFor("Corroborated warning"),
+        criticalLead: leadFor("Critical threshold"),
+      };
+    }), [allDetections, allRows, episodes]);
   const [episodeId, setEpisodeId] = useState<string | null>(null);
   const [metricGroup, setMetricGroup] = useState<MetricGroup>("water");
   const [aiBrief, setAiBrief] = useState<IncidentBrief | null>(null);
@@ -638,6 +735,11 @@ export function ReidDashboard() {
     evidence: episodeEvidence,
   };
   const presentedAiBrief = visibleAiBrief ? presentIncidentBrief(visibleAiBrief, briefingInput) : null;
+  const visibleCitedEvidence = visibleAiBrief
+    ? visibleAiBrief.evidenceCitations
+      .map((id) => episodeEvidence.find((signal) => signal.id === id))
+      .filter((signal): signal is (typeof episodeEvidence)[number] => Boolean(signal))
+    : [];
 
   async function generateIncidentBrief() {
     setAiIncidentId(episode.id);
@@ -840,9 +942,13 @@ export function ReidDashboard() {
               </div>
             </section>
 
-            <AnalysisMethodPanel signature={failureSignature} confirmedLeadHours={backtest.confirmedLeadHours} />
+            <AnalysisMethodPanel
+              signature={failureSignature}
+              confirmedLeadHours={backtest.confirmedLeadHours}
+              failureComparisons={failureComparisons}
+            />
 
-            <SensorTrustGate report={sensorTrust} />
+            <SensorTrustGate rows={allRows} />
 
             <IncidentTimeline kind={episode.kind} milestones={incidentTimeline} />
 
@@ -852,7 +958,7 @@ export function ReidDashboard() {
                 <h2>Why this incident is flagged</h2>
                 <div className="evidence-list">
                   {episodeEvidence.map((signal) => (
-                    <div className="evidence-row" key={signal.id}>
+                    <div className="evidence-row" id={`evidence-${signal.id}`} key={signal.id}>
                       <span className="evidence-dot" />
                       <div>
                         <strong>{signal.label}</strong>
@@ -870,6 +976,12 @@ export function ReidDashboard() {
                   <span className={`ai-mode ${visibleAiMode || "ready"}`}>{visibleAiMode === "live" ? "live LLM" : visibleAiMode || "ready"}</span>
                 </div>
                 <h2>Cloudy&apos;s incident brief</h2>
+                <div className="ai-evidence-flow" aria-label="AI evidence boundary">
+                  <span><b>1</b> Detector</span><i>→</i>
+                  <span><b>2</b> {episodeEvidence.length} validated signals</span><i>→</i>
+                  <span><b>3</b> Structured briefing</span><i>→</i>
+                  <span><b>4</b> Human decision</span>
+                </div>
                 <p className="briefing">“{presentedAiBrief?.summary || briefing}”</p>
                 <div className="briefing-action">
                   <strong>{presentedAiBrief?.headline || "Recommended next action"}</strong>
@@ -884,7 +996,21 @@ export function ReidDashboard() {
                   )}
                 </div>
                 {visibleAiBrief && <p className="uncertainty"><strong>Uncertainty:</strong> {presentedAiBrief?.uncertainty}</p>}
-                {visibleAiBrief && <p className="citation-line">Evidence cited: {visibleAiBrief.evidenceCitations.join(", ")}</p>}
+                {visibleAiBrief && (
+                  <div className="ai-citation-ledger">
+                    <div>
+                      <strong>Evidence used by this briefing</strong>
+                      <span>{visibleCitedEvidence.length} detector values · click to inspect source</span>
+                    </div>
+                    {visibleCitedEvidence.map((signal) => (
+                      <a href={`#evidence-${signal.id}`} key={signal.id}>
+                        <code>{signal.id}</code>
+                        <span>{signal.label}</span>
+                        <b>{signal.value}</b>
+                      </a>
+                    ))}
+                  </div>
+                )}
                 {visibleAiBrief && (
                   <ul className="ai-trust-strip" aria-label="AI response validation">
                     <li>Schema valid</li>

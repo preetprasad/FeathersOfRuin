@@ -1181,6 +1181,95 @@ button {
   font-family: var(--font-geist-mono), monospace;
 }
 
+.ai-evidence-flow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 12px 0 2px;
+  color: var(--paper-muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+}
+
+.ai-evidence-flow span {
+  padding: 6px 7px;
+  border: 1px solid rgb(121 185 208 / 0.22);
+  border-radius: 7px;
+  background: rgb(121 185 208 / 0.05);
+}
+
+.ai-evidence-flow b {
+  color: var(--blue);
+  font-weight: 500;
+}
+
+.ai-evidence-flow i {
+  color: #65716b;
+  font-style: normal;
+}
+
+.ai-citation-ledger {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 5px;
+  margin-top: 13px;
+  padding: 11px;
+  border: 1px solid rgb(121 185 208 / 0.22);
+  border-radius: 10px;
+  background: rgb(6 23 19 / 0.28);
+}
+
+.ai-citation-ledger > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 3px;
+}
+
+.ai-citation-ledger > div strong {
+  color: var(--blue);
+  font-size: 10px;
+}
+
+.ai-citation-ledger > div span {
+  color: var(--paper-muted);
+  font-size: 8px;
+}
+
+.ai-citation-ledger a {
+  display: grid;
+  grid-template-columns: minmax(115px, 0.8fr) minmax(120px, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--paper-muted);
+  font-size: 9px;
+  text-decoration: none;
+}
+
+.ai-citation-ledger a:hover,
+.ai-citation-ledger a:focus-visible {
+  border-color: rgb(121 185 208 / 0.55);
+  background: rgb(121 185 208 / 0.08);
+}
+
+.ai-citation-ledger code {
+  color: var(--blue);
+  font-size: 8px;
+}
+
+.ai-citation-ledger b {
+  color: var(--paper);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  font-weight: 500;
+}
+
 .ai-trust-strip {
   position: relative;
   z-index: 1;
@@ -1445,8 +1534,159 @@ button {
   line-height: 1.45;
 }
 
+.failure-comparison {
+  margin-top: 12px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgb(16 23 21 / 0.62);
+}
+
+.failure-comparison-heading {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1.2fr);
+  gap: 24px;
+  align-items: end;
+}
+
+.failure-comparison-heading h3 {
+  margin: 6px 0 0;
+  font-size: 16px;
+}
+
+.failure-comparison-heading p,
+.failure-comparison-conclusion {
+  margin: 0;
+  color: var(--paper-muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.corroboration-formula {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+}
+
+.corroboration-formula span,
+.corroboration-formula b {
+  padding: 7px 9px;
+  border: 1px solid rgb(121 185 208 / 0.24);
+  border-radius: 999px;
+  background: rgb(121 185 208 / 0.06);
+  color: var(--blue);
+  font-weight: 500;
+}
+
+.corroboration-formula i {
+  color: var(--paper-muted);
+  font-style: normal;
+}
+
+.corroboration-formula b {
+  border-color: rgb(158 231 192 / 0.28);
+  background: rgb(158 231 192 / 0.07);
+  color: var(--mint);
+}
+
+.failure-comparison-table {
+  margin-top: 13px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.failure-comparison-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 1.15fr) repeat(4, minmax(105px, 1fr));
+  background: var(--ink-soft);
+}
+
+.failure-comparison-row + .failure-comparison-row {
+  border-top: 1px solid var(--line);
+}
+
+.failure-comparison-row > * {
+  padding: 10px;
+  border-right: 1px solid var(--line);
+  color: var(--paper-muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+}
+
+.failure-comparison-row > *:last-child { border-right: 0; }
+.failure-comparison-row.header > * { color: #78827d; font-size: 7px; text-transform: uppercase; }
+.failure-comparison-row strong { color: var(--paper); }
+.failure-comparison-row .warning-cell { color: var(--mint); }
+.failure-comparison-row .critical-cell { color: var(--amber); }
+.failure-comparison-row .failure-cell { color: var(--red); }
+
+.failure-comparison-conclusion {
+  margin-top: 11px;
+}
+
+.failure-comparison-conclusion strong { color: var(--mint); }
+
 .sensor-trust-panel {
   margin-top: 20px;
+}
+
+.trust-stress-test {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.65fr) minmax(420px, 1.35fr);
+  gap: 16px 24px;
+  margin-top: 20px;
+  padding: 14px;
+  border: 1px solid rgb(244 189 104 / 0.25);
+  border-radius: 12px;
+  background: rgb(244 189 104 / 0.04);
+}
+
+.trust-stress-copy strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--amber);
+  font-size: 13px;
+}
+
+.trust-stress-copy p,
+.stress-boundary {
+  margin: 5px 0 0;
+  color: var(--paper-muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.trust-scenarios {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  gap: 6px;
+}
+
+.trust-scenarios button {
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--ink-soft);
+  color: var(--paper-muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+}
+
+.trust-scenarios button[aria-pressed="true"] {
+  border-color: rgb(244 189 104 / 0.55);
+  background: rgb(244 189 104 / 0.12);
+  color: var(--amber);
+}
+
+.stress-boundary {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #78827d;
 }
 
 .sensor-trust-heading {
@@ -2378,7 +2618,9 @@ button {
   .sensitivity-heading,
   .analysis-method-heading,
   .analysis-result-grid,
+  .failure-comparison-heading,
   .sensor-trust-heading,
+  .trust-stress-test,
   .trust-evidence-grid,
   .audit-heading,
   .audit-workspace {
@@ -2488,6 +2730,37 @@ button {
 
   .signature-chart-heading ul {
     justify-content: flex-start;
+  }
+
+  .corroboration-formula,
+  .ai-evidence-flow {
+    flex-wrap: wrap;
+  }
+
+  .failure-comparison-table {
+    overflow-x: auto;
+  }
+
+  .failure-comparison-row {
+    min-width: 680px;
+  }
+
+  .ai-citation-ledger > div {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .ai-citation-ledger a {
+    grid-template-columns: 1fr auto;
+  }
+
+  .ai-citation-ledger a span {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .stress-boundary {
+    grid-column: 1;
   }
 
   .resolution-form {
