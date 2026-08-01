@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import sensorCsv from "../locations/reid-library/data/raw/reid_library_sensor_data.csv?raw";
+import sensorData from "../locations/reid-library/data/processed/reid_library_sensor_data.json";
 
 type Status = "stable" | "warning" | "critical" | "failed";
 type SensorRow = {
@@ -87,30 +87,19 @@ function parseDate(value: string) {
   return new Date(`${value.replace(" ", "T")}+08:00`);
 }
 
-function parseNumber(value: string | undefined) {
-  if (!value?.trim()) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function parseCsv(csv: string): SensorRow[] {
-  const [headerLine, ...lines] = csv.trim().split(/\r?\n/);
-  const headers = headerLine.split(",");
-  const index = (name: string) => headers.indexOf(name);
-
-  return lines.map((line) => {
-    const cells = line.split(",");
-    const source = cells[index("sensor_source")]?.trim();
+function prepareSensorData(): SensorRow[] {
+  return sensorData.map((row) => {
+    const source = row.sensor_source.trim();
     return {
-      timestamp: parseDate(cells[index("timestamp")]),
-      power: parseNumber(cells[index("power_kw")]),
-      airflow: parseNumber(cells[index("airflow_m3s")]),
-      pressure: parseNumber(cells[index("water_pressure_kpa")]),
-      flow: parseNumber(cells[index("water_flow_lps")]),
-      temperature: parseNumber(cells[index("temperature_c")]),
-      vibration: parseNumber(cells[index("vibration_level")]),
-      sound: cells[index("sound_event")]?.trim() || "unknown",
-      status: (cells[index("system_status")]?.trim() || "stable") as Status,
+      timestamp: parseDate(row.timestamp),
+      power: row.power_kw,
+      airflow: row.airflow_m3s,
+      pressure: row.water_pressure_kpa,
+      flow: row.water_flow_lps,
+      temperature: row.temperature_c,
+      vibration: row.vibration_level,
+      sound: row.sound_event.trim() || "unknown",
+      status: (row.system_status.trim() || "stable") as Status,
       source: source === "barry_j_" ? "barry_j_smart_sensor" : source,
     };
   });
@@ -227,7 +216,7 @@ function SignalChart({ rows, group }: { rows: SensorRow[]; group: MetricGroup })
 }
 
 export function ReidDashboard() {
-  const allRows = useMemo(() => parseCsv(sensorCsv), []);
+  const allRows = useMemo(() => prepareSensorData(), []);
   const [episodeId, setEpisodeId] = useState("failure-two");
   const [metricGroup, setMetricGroup] = useState<MetricGroup>("water");
   const episode = episodes.find((item) => item.id === episodeId) || episodes[0];
