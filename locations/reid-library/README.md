@@ -4,6 +4,8 @@
 
 [Back to the event guide](../../README.md)
 
+[Project decisions, pivots, delivery history, and action plan](./PROJECT_RECORD.md)
+
 ## Mission
 
 Dragons depend on Reid Library's damaged automated power, ventilation, and water systems. The machinery still operates, but reliability is declining and almost nobody understands the complete system. Cloudy's maintenance notes and hourly readings contain warning patterns that have not yet been connected.

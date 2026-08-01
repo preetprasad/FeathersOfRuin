@@ -34,6 +34,7 @@
 - [Interactive campus map](https://ultimate-hackathon.vercel.app/map)
 - [Side-quest board](https://ultimate-hackathon.vercel.app/side-quests)
 - [Live Reid Sentinel dashboard](https://reid-sentinel.vercel.app/)
+- [Reid Sentinel project record](locations/reid-library/PROJECT_RECORD.md) — decisions, pivots, milestones, risks, takeaways, and action plan
 - [Event datasets](https://drive.google.com/drive/folders/1PhiIBZ-ngRpJv91hGCu_9vg9zpwcYfbp?usp=sharing)
 
 ## Location workspaces
