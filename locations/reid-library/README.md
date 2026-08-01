@@ -178,7 +178,7 @@ Current capabilities:
 - Traces every detector signal to the relevant recovered Cloudy note
 - Backtests the detector over all 500 records and displays measured performance
 - Sends a schema-validated evidence object to a live LLM and requires structured, cited output
-- Uses Vercel AI Gateway in production and local Ollama during local development
+- Uses a token-protected 4Freshers Ollama bridge in the current public demo, with Vercel AI Gateway available when account credits are unlocked
 - Falls back transparently to deterministic decision support if the model is unavailable
 - Lets a maintenance coordinator record a reversible response while keeping AI out of direct system control
 
@@ -221,7 +221,31 @@ The server sends only a bounded, schema-validated incident evidence object to th
 
 The endpoint rejects oversized or malformed requests, treats evidence strings as untrusted data, filters invented citation IDs, keeps credentials server-side, and never lets the model operate infrastructure directly.
 
-Production uses the project's automatically provisioned Vercel AI Gateway identity. Local development uses `gemma3:4b` through Ollama by default. These can be changed with `AI_MODEL`, `OLLAMA_MODEL`, or `OLLAMA_BASE_URL` environment variables.
+The current public demo uses `gemma3:4b` through a token-protected ngrok bridge because Vercel requires a payment card before unlocking its AI Gateway credit. The bridge exposes only the fixed briefing endpoint, caps concurrent requests, validates message size, fixes the local model and generation settings, and requires a secret stored only in local and Vercel environment configuration. Local development talks directly to Ollama. Vercel AI Gateway remains the automatic alternative when remote Ollama variables are absent and Gateway billing is available.
+
+### Demo AI operations
+
+For the live AI button to work during judging, the Mac running Ollama must remain awake and connected. Keep these two existing processes running:
+
+1. The token-protected proxy on local port `11435`.
+2. The ngrok tunnel forwarding to port `11435`.
+
+The local secret is stored in the ignored `.env.ollama-proxy` file and must never be committed. If either process needs restarting:
+
+```bash
+set -a
+source .env.ollama-proxy
+set +a
+npm run ollama:proxy
+```
+
+In a second terminal:
+
+```bash
+ngrok http 11435
+```
+
+If ngrok assigns a different URL, replace the sensitive Vercel `OLLAMA_REMOTE_URL` production variable and redeploy. The token normally remains unchanged. `OLLAMA_REMOTE_TOKEN` must match `OLLAMA_PROXY_TOKEN` but must never be printed in documentation or application output.
 
 ### Verification
 
