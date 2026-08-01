@@ -90,6 +90,7 @@ This document is the durable record of the decisions, pivots, rationale, action 
 | Add Vercel as the public judge path | The Sites URL led visitors through ChatGPT authentication, which creates demo friction | `https://reid-sentinel.vercel.app/` is the recommended presentation URL |
 | Keep both deployment paths current | Sites is the configured workspace host; Vercel is the frictionless public demo | Each completed improvement has been published to both |
 | Constrain responsive grid tracks and enlarge mobile controls | The internal audit found the 390-pixel viewport expanding to 770 pixels and several touch controls below the recommended target size | Narrow screens keep overflow inside the incident and chart surfaces while primary controls remain comfortably tappable |
+| Normalise display rounding and shelter language | The internal audit found a floating-point `−0.00` display and human-centred wording in a dragon shelter | Near-zero metrics render as `0.00`, ventilation timeline copy states the signed residual directly, and shelter consequences refer to occupants |
 | Add provider health reporting | A presenter needs to know whether the live model path is ready before pressing the button | The header reports Ollama, Claude standby, and guaranteed fallback readiness |
 
 ### Human control and auditability
@@ -244,7 +245,7 @@ These are retrospective results on the event dataset. They are not a production 
 - [ ] Start Ollama, the token-protected proxy, and ngrok; keep the Mac awake and connected to power.
 - [ ] Confirm the current tunnel URL matches the production `OLLAMA_REMOTE_URL` value.
 - [ ] Open `/api/briefing/health` and confirm Ollama is available and Claude is on standby.
-- [ ] Run the complete automated suite and verify all 32 tests pass.
+- [ ] Run the complete automated suite and verify all 33 tests pass.
 - [ ] Test the public Vercel URL in a private browser window with no existing session.
 - [ ] Generate one live briefing for a water incident and one for ventilation.
 - [ ] Replay both recorded failures, then show the Sensor Trust Gate baseline and at least two reject scenarios without presenting the salvaged sensor as a second selected thread.

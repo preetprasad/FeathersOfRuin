@@ -9,6 +9,7 @@ import {
   buildIncidentTimeline,
   buildFailureSignature,
   detectEpisodes,
+  formatMetric,
   prepareSensorData,
   runDetector,
   type RawSensorRecord,
@@ -17,6 +18,12 @@ import {
 
 const rows = prepareSensorData(sensorData as RawSensorRecord[]);
 const detections = runDetector(rows);
+
+test("formats near-zero measurements without exposing negative zero", () => {
+  assert.equal(formatMetric(-0.004, 2), "0.00");
+  assert.equal(formatMetric(-0.006, 2), "-0.01");
+  assert.equal(formatMetric(null, 2), "—");
+});
 
 function rowAt(hour: number, overrides: Partial<SensorRow> = {}): SensorRow {
   return {

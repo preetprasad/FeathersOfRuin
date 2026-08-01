@@ -1277,7 +1277,7 @@ Adjust these blocks when the organisers announce the actual submission deadline 
 - [x] Name the selected region and one selected thread: Reid Library · Two failures, no warning.
 - [x] Explain the survivor's decision: whether evidence requires investigation, preparation, notification, or continued monitoring.
 - [x] Show all 500 supplied sensor records and the recovered Cloudy notes being used.
-- [x] Show incident signals, calculated timelines, threshold sensitivity, and the averaged failure signature.
+- [x] Show incident signals, coherent signal-specific summaries, calculated timelines, threshold sensitivity, and the averaged failure signature.
 - [x] Demonstrate the structured AI incident brief and its bounded evidence contract.
 - [x] Expose exact signal citations, uncertainty, provider status, and ground-truth boundaries.
 - [x] Let the coordinator choose, explain, resolve, and export the response decision.

@@ -23,6 +23,7 @@ import {
   buildFailureSignature,
   buildIncidentTimeline,
   detectEpisodes,
+  formatMetric,
   prepareSensorData,
   runDetector,
   uniqueEvidence,
@@ -159,7 +160,7 @@ const metricViewCopy = {
   },
   shelter: {
     title: "Shelter impact",
-    description: "Temperature, vibration, and listener observations show the human consequence and independent corroboration.",
+    description: "Temperature, vibration, and listener observations show consequences for shelter occupants and provide independent corroboration.",
   },
 } as const;
 
@@ -177,10 +178,6 @@ function extrema(values: Array<number | null>, mode: "min" | "max") {
   const clean = values.filter((value): value is number => value !== null);
   if (!clean.length) return null;
   return mode === "min" ? Math.min(...clean) : Math.max(...clean);
-}
-
-function format(value: number | null, digits = 1) {
-  return value === null ? "—" : value.toFixed(digits);
 }
 
 function auditTimestamp(value: string) {
@@ -733,30 +730,30 @@ export function ReidDashboard() {
   const viewCopy = metricViewCopy[metricGroup];
   const viewKpis = metricGroup === "water"
     ? [
-        { label: "Lowest pressure", value: format(pressureMin, 0), unit: "kPa", detail: isFailure ? "Below the healthy ~350 kPa band" : "Water pressure remains near its healthy band" },
-        { label: "Lowest flow", value: format(flowMin, 2), unit: "L/s", detail: isFailure ? "Severe loss of delivered water" : "No material flow loss during this episode" },
-        { label: "Pressure lost", value: format(pressureDrop, 0), unit: "kPa", detail: "Change from the first available reading to the incident minimum" },
-        { label: "Peak vibration", value: format(vibrationMax, 2), unit: "", detail: "Independent machinery evidence; stable is typically near 0.15" },
+        { label: "Lowest pressure", value: formatMetric(pressureMin, 0), unit: "kPa", detail: isFailure ? "Below the healthy ~350 kPa band" : "Water pressure remains near its healthy band" },
+        { label: "Lowest flow", value: formatMetric(flowMin, 2), unit: "L/s", detail: isFailure ? "Severe loss of delivered water" : "No material flow loss during this episode" },
+        { label: "Pressure lost", value: formatMetric(pressureDrop, 0), unit: "kPa", detail: "Change from the first available reading to the incident minimum" },
+        { label: "Peak vibration", value: formatMetric(vibrationMax, 2), unit: "", detail: "Independent machinery evidence; stable is typically near 0.15" },
       ]
     : metricGroup === "ventilation"
       ? [
-          { label: "Lowest airflow", value: format(airflowMin, 2), unit: "m³/s", detail: "Minimum delivered airflow in the selected incident window" },
-          { label: "Worst efficiency gap", value: format(residualMin, 2), unit: "m³/s", detail: "Negative residual means less airflow than healthy power demand predicts" },
-          { label: "Highest power", value: format(powerMax, 1), unit: "kW", detail: "Demand alone is not treated as proof of useful ventilation" },
-          { label: "Peak vibration", value: format(vibrationMax, 2), unit: "", detail: "Corroborates mechanical stress independently of the efficiency model" },
+          { label: "Lowest airflow", value: formatMetric(airflowMin, 2), unit: "m³/s", detail: "Minimum delivered airflow in the selected incident window" },
+          { label: "Worst efficiency gap", value: formatMetric(residualMin, 2), unit: "m³/s", detail: "Negative residual means less airflow than healthy power demand predicts" },
+          { label: "Highest power", value: formatMetric(powerMax, 1), unit: "kW", detail: "Demand alone is not treated as proof of useful ventilation" },
+          { label: "Peak vibration", value: formatMetric(vibrationMax, 2), unit: "", detail: "Corroborates mechanical stress independently of the efficiency model" },
         ]
       : [
-          { label: "Lowest temperature", value: format(temperatureMin, 1), unit: "°C", detail: "Temperature is consequence evidence that changes after earlier warning signals" },
-          { label: "Temperature fall", value: format(temperatureDrop, 1), unit: "°C", detail: "Change from the first available shelter reading to the incident minimum" },
-          { label: "Peak vibration", value: format(vibrationMax, 2), unit: "", detail: "Physical corroboration of machinery distress" },
+          { label: "Lowest temperature", value: formatMetric(temperatureMin, 1), unit: "°C", detail: "Temperature is consequence evidence that changes after earlier warning signals" },
+          { label: "Temperature fall", value: formatMetric(temperatureDrop, 1), unit: "°C", detail: "Change from the first available shelter reading to the incident minimum" },
+          { label: "Peak vibration", value: formatMetric(vibrationMax, 2), unit: "", detail: "Physical corroboration of machinery distress" },
           { label: "Listener events", value: String(listenerEvents), unit: "reports", detail: "Subjective observations remain Watch evidence until sensors corroborate them" },
         ];
   const failureAt = rows.find((row) => row.status === "failed")?.timestamp;
   const firstWatchAt = episodeDetections.find((item) => item.level !== "safe")?.timestamp;
   const leadHours = failureAt && firstWatchAt ? (failureAt.getTime() - firstWatchAt.getTime()) / 3_600_000 : null;
   const briefing = isFailure
-    ? `Water pressure loses ${format(pressureDrop, 0)} kPa across the incident window while vibration rises to ${format(vibrationMax, 2)}. The same sequence appears before both recorded failures, providing a 24-hour preparation window.`
-    : `Delivered airflow falls roughly ${format(Math.abs(residualMin ?? 0), 2)} m³/s below the healthy power relationship. Water remains comparatively stable, isolating this episode as ventilation inefficiency rather than system-wide failure.`;
+    ? `Water pressure loses ${formatMetric(pressureDrop, 0)} kPa across the incident window while vibration rises to ${formatMetric(vibrationMax, 2)}. The same sequence appears before both recorded failures, providing a 24-hour preparation window.`
+    : `Delivered airflow falls roughly ${formatMetric(Math.abs(residualMin ?? 0), 2)} m³/s below the healthy power relationship. Water remains comparatively stable, isolating this episode as ventilation inefficiency rather than system-wide failure.`;
   const visibleAiBrief = aiIncidentId === episode.id ? aiBrief : null;
   const visibleAiMode = aiIncidentId === episode.id ? aiMode : null;
   const visibleAiProvider = aiIncidentId === episode.id ? aiProvider : null;

@@ -172,6 +172,12 @@ export function parsePerthDate(value: string) {
   return new Date(`${value.replace(" ", "T")}+08:00`);
 }
 
+export function formatMetric(value: number | null, digits = 1) {
+  if (value === null) return "—";
+  const rounded = Number(value.toFixed(digits));
+  return (Object.is(rounded, -0) ? 0 : rounded).toFixed(digits);
+}
+
 export function prepareSensorData(records: RawSensorRecord[]): SensorRow[] {
   return records.map((row) => ({
     timestamp: parsePerthDate(row.timestamp),
@@ -427,7 +433,7 @@ export function buildIncidentTimeline(
   if (worstEfficiency && worstEfficiency.timestamp.getTime() !== firstWarning?.timestamp.getTime()) milestones.push({
     id: "worst-efficiency",
     label: "Lowest efficiency",
-    detail: `${worstEfficiency.airflowResidual?.toFixed(2)} m³/s below the expected delivery relationship.`,
+    detail: `Residual reached ${formatMetric(worstEfficiency.airflowResidual, 2)} m³/s against the expected delivery relationship.`,
     timestamp: worstEfficiency.timestamp,
     level: worstEfficiency.level,
     source: "detector",
