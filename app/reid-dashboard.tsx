@@ -6,11 +6,13 @@ import { ACTION_CATALOG, presentIncidentBrief, type BriefingRequest, type Incide
 import {
   airflowResidual,
   backtestDetector,
+  buildIncidentTimeline,
   detectEpisodes,
   prepareSensorData,
   runDetector,
   uniqueEvidence,
   type RawSensorRecord,
+  type IncidentMilestone,
   type SensorRow,
 } from "../lib/reid-analysis";
 
@@ -139,6 +141,48 @@ function SignalChart({ rows, group }: { rows: SensorRow[]; group: MetricGroup })
   );
 }
 
+function IncidentTimeline({ milestones, kind }: { milestones: IncidentMilestone[]; kind: "general" | "water" | "ventilation" }) {
+  const reference = milestones.at(-1)?.timestamp;
+  const spanHours = milestones.length > 1
+    ? Math.round((milestones.at(-1)!.timestamp.getTime() - milestones[0].timestamp.getTime()) / 3_600_000)
+    : 0;
+
+  return (
+    <section className="panel timeline-panel">
+      <div className="timeline-heading">
+        <div>
+          <span className="eyebrow">Calculated incident sequence</span>
+          <h2>{kind === "water" ? `${spanHours} hours from first watch to failure` : `${spanHours} hours from warning to recovery`}</h2>
+        </div>
+        <p>{kind === "water"
+          ? "Every stage is derived from detector timestamps; only the final confirmation uses supplied evaluation truth."
+          : "The detector shows when delivery efficiency left—and returned to—the transparent operating boundary."}</p>
+      </div>
+      <ol className="incident-timeline" style={{ "--milestone-count": milestones.length } as React.CSSProperties}>
+        {milestones.map((milestone, index) => {
+          const hoursToReference = reference
+            ? Math.round((reference.getTime() - milestone.timestamp.getTime()) / 3_600_000)
+            : 0;
+          return (
+            <li className={`milestone ${milestone.level}`} key={milestone.id}>
+              <div className="milestone-time">
+                <strong>{hoursToReference ? `T−${hoursToReference}h` : "T0"}</strong>
+                <span>{compactDate(milestone.timestamp)}</span>
+              </div>
+              <span className="milestone-node" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <div className="milestone-copy">
+                <strong>{milestone.label}</strong>
+                <p>{milestone.detail}</p>
+                <span>{milestone.source === "evaluation" ? "supplied evaluation truth" : "transparent detector"}</span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
 export function ReidDashboard() {
   const allRows = useMemo(() => prepareSensorData(sensorData as RawSensorRecord[]), []);
   const allDetections = useMemo(() => runDetector(allRows), [allRows]);
@@ -180,6 +224,10 @@ export function ReidDashboard() {
     [allDetections, episode],
   );
   const episodeEvidence = useMemo(() => uniqueEvidence(episodeDetections), [episodeDetections]);
+  const incidentTimeline = useMemo(
+    () => buildIncidentTimeline(episode, allRows, allDetections),
+    [episode, allRows, allDetections],
+  );
 
   const pressureMin = extrema(rows.map((row) => row.pressure), "min");
   const flowMin = extrema(rows.map((row) => row.flow), "min");
@@ -371,6 +419,8 @@ export function ReidDashboard() {
                 </article>
               </div>
             </section>
+
+            <IncidentTimeline kind={episode.kind} milestones={incidentTimeline} />
 
             <div className="decision-grid">
               <section className="panel evidence-panel">

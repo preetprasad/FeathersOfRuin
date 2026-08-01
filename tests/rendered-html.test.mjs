@@ -61,6 +61,8 @@ test("keeps the evidence source and starter preview out of the finished product"
   assert.match(briefingRoute, /Local Ollama/);
   assert.match(briefingRoute, /Claude hosted fallback/);
   assert.match(dashboard, /Checking AI providers/);
+  assert.match(dashboard, /Calculated incident sequence/);
+  assert.match(dashboard, /transparent detector/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton|drizzle/);
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });

@@ -58,6 +58,15 @@ export type DetectedEpisode = {
   detections: Detection[];
 };
 
+export type IncidentMilestone = {
+  id: string;
+  label: string;
+  detail: string;
+  timestamp: Date;
+  level: AlertLevel;
+  source: "detector" | "evaluation";
+};
+
 export const CLOUDY_NOTES = [
   { id: 1, title: "The pipes are getting old", hypothesis: "Pressure and flow deterioration can precede valve failure." },
   { id: 2, title: "The library has a rhythm", hypothesis: "Sound and vibration should corroborate sensor warnings." },
@@ -244,6 +253,99 @@ export function detectEpisodes(detections: Detection[]): DetectedEpisode[] {
         detections: group,
       };
     });
+}
+
+export function buildIncidentTimeline(
+  episode: DetectedEpisode,
+  rows: SensorRow[],
+  allDetections: Detection[],
+): IncidentMilestone[] {
+  if (episode.kind === "water") {
+    const candidates: Array<IncidentMilestone | null> = [
+      (() => {
+        const detection = episode.detections.find((item) => item.level === "watch");
+        return detection ? {
+          id: "first-watch",
+          label: "Listener watch",
+          detail: detection.signals[0]?.label || "An early observation moved the system out of safe state.",
+          timestamp: detection.timestamp,
+          level: detection.level,
+          source: "detector",
+        } : null;
+      })(),
+      (() => {
+        const detection = episode.detections.find((item) => item.level === "warning");
+        return detection ? {
+          id: "confirmed-warning",
+          label: "Corroborated warning",
+          detail: "Pressure and flow deterioration were corroborated by sound or vibration.",
+          timestamp: detection.timestamp,
+          level: detection.level,
+          source: "detector",
+        } : null;
+      })(),
+      (() => {
+        const detection = episode.detections.find((item) => item.level === "critical");
+        return detection ? {
+          id: "critical-threshold",
+          label: "Critical threshold",
+          detail: "Pressure fell below 250 kPa while flow fell below 1.6 L/s.",
+          timestamp: detection.timestamp,
+          level: detection.level,
+          source: "detector",
+        } : null;
+      })(),
+      (() => {
+        const detection = episode.detections.find((item) => item.level === "failed");
+        if (!detection) return null;
+        const recorded = rows.some((row) => row.timestamp.getTime() === detection.timestamp.getTime() && row.status === "failed");
+        return {
+          id: "failure-threshold",
+          label: recorded ? "Recorded failure" : "Failure threshold",
+          detail: recorded
+            ? "The supplied evaluation label confirms failure; it was not used by the detector."
+            : "Pressure and flow crossed the transparent failure thresholds.",
+          timestamp: detection.timestamp,
+          level: detection.level,
+          source: recorded ? "evaluation" : "detector",
+        };
+      })(),
+    ];
+    return candidates.filter((item): item is IncidentMilestone => item !== null);
+  }
+
+  const firstWarning = episode.detections.find((item) => item.level === "warning");
+  const worstEfficiency = episode.detections.reduce<Detection | null>((worst, item) => {
+    if (item.airflowResidual === null) return worst;
+    return !worst || worst.airflowResidual === null || item.airflowResidual < worst.airflowResidual ? item : worst;
+  }, null);
+  const resolved = allDetections.find((item) => item.timestamp > episode.end && item.level === "safe");
+  const milestones: IncidentMilestone[] = [];
+  if (firstWarning) milestones.push({
+    id: "ventilation-warning",
+    label: "Efficiency warning",
+    detail: "Delivered airflow fell below the healthy power relationship with elevated vibration.",
+    timestamp: firstWarning.timestamp,
+    level: firstWarning.level,
+    source: "detector",
+  });
+  if (worstEfficiency && worstEfficiency.timestamp.getTime() !== firstWarning?.timestamp.getTime()) milestones.push({
+    id: "worst-efficiency",
+    label: "Lowest efficiency",
+    detail: `${worstEfficiency.airflowResidual?.toFixed(2)} m³/s below the expected delivery relationship.`,
+    timestamp: worstEfficiency.timestamp,
+    level: worstEfficiency.level,
+    source: "detector",
+  });
+  if (resolved) milestones.push({
+    id: "warning-cleared",
+    label: "Warning cleared",
+    detail: "Airflow and vibration returned inside the transparent warning boundary.",
+    timestamp: resolved.timestamp,
+    level: "safe",
+    source: "detector",
+  });
+  return milestones;
 }
 
 export function backtestDetector(rows: SensorRow[], detections = runDetector(rows)) {

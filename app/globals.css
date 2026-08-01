@@ -710,6 +710,127 @@ button {
   opacity: 0.55;
 }
 
+.timeline-panel {
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.timeline-heading {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(300px, 1.2fr);
+  gap: 28px;
+  align-items: end;
+}
+
+.timeline-heading h2 {
+  margin: 6px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(25px, 3vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.timeline-heading p {
+  margin: 0;
+  color: var(--paper-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.incident-timeline {
+  --milestone-count: 4;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--milestone-count), minmax(0, 1fr));
+  gap: 0;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.incident-timeline::before {
+  position: absolute;
+  top: 61px;
+  right: calc(100% / var(--milestone-count) / 2);
+  left: calc(100% / var(--milestone-count) / 2);
+  height: 1px;
+  background: linear-gradient(90deg, var(--amber), var(--red));
+  content: "";
+}
+
+.milestone {
+  position: relative;
+  min-width: 0;
+  padding-right: 18px;
+}
+
+.milestone-time strong,
+.milestone-time span,
+.milestone-copy > strong,
+.milestone-copy > span {
+  display: block;
+}
+
+.milestone-time strong {
+  color: var(--amber);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 16px;
+}
+
+.milestone-time span {
+  margin-top: 3px;
+  color: var(--paper-muted);
+  font-size: 9px;
+}
+
+.milestone-node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: 12px 0;
+  border: 1px solid var(--amber);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--amber);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+}
+
+.milestone.critical .milestone-node,
+.milestone.failed .milestone-node {
+  border-color: var(--red);
+  color: var(--red);
+  box-shadow: 0 0 18px rgb(255 119 109 / 0.14);
+}
+
+.milestone.safe .milestone-node {
+  border-color: var(--mint);
+  color: var(--mint);
+}
+
+.milestone-copy > strong {
+  font-size: 13px;
+}
+
+.milestone-copy p {
+  min-height: 48px;
+  margin: 6px 0 8px;
+  color: var(--paper-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.milestone-copy > span {
+  color: var(--blue);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .validation-panel,
 .operator-panel {
   display: grid;
@@ -841,7 +962,8 @@ button {
   }
 
   .validation-panel,
-  .operator-panel {
+  .operator-panel,
+  .timeline-heading {
     grid-template-columns: 1fr;
   }
 
@@ -892,6 +1014,43 @@ button {
 
   .footer-note {
     flex-direction: column;
+  }
+
+  .incident-timeline {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .incident-timeline::before {
+    top: 30px;
+    bottom: 30px;
+    left: 14px;
+    width: 1px;
+    height: auto;
+  }
+
+  .milestone {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 14px;
+    padding: 0;
+  }
+
+  .milestone-time {
+    grid-column: 2;
+  }
+
+  .milestone-node {
+    grid-row: 1 / span 2;
+    margin: 0;
+  }
+
+  .milestone-copy {
+    grid-column: 2;
+  }
+
+  .milestone-copy p {
+    min-height: 0;
   }
 }
 

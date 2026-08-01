@@ -177,6 +177,7 @@ Current capabilities:
 - Keeps `system_status` as an evaluation ribbon rather than using it as detector input
 - Traces every detector signal to the relevant recovered Cloudy note
 - Backtests the detector over all 500 records and displays measured performance
+- Builds an incident-specific timeline from detector timestamps, showing watch, corroborated warning, critical threshold, and recorded failure with exact lead times
 - Sends a schema-validated evidence object to a live LLM and requires structured, cited output
 - Uses a token-protected 4Freshers Ollama bridge as the primary model in the public demo
 - Fails over to Claude Haiku when Ollama is unavailable, then to validated deterministic decision support if every model is unavailable
@@ -197,6 +198,17 @@ The checked-in automated tests currently establish:
 | Explanation for extra watches | The six supplied missing numeric readings |
 
 These are results on the supplied historical event data, not claims about general performance on future building data.
+
+### Calculated incident timeline
+
+Selecting either water failure produces a judge-visible sequence calculated directly from the detector output:
+
+```text
+Water failure 01: T−24h listener watch → T−23h corroborated warning → T−13h critical → T0 recorded failure
+Water failure 02: T−24h listener watch → T−21h corroborated warning → T−14h critical → T0 recorded failure
+```
+
+The first three milestones are labelled as transparent detector output. The final milestone is explicitly labelled as supplied evaluation truth, and the interface states that this label was not used to derive the warning. Ventilation incidents instead show warning onset, lowest calculated airflow efficiency, and return inside the warning boundary.
 
 ### Transparent detector rules
 
@@ -271,7 +283,7 @@ npm test
 npx next build
 ```
 
-The test suite covers incident discovery, lead time, false alarms, ground-truth isolation, server rendering, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. The dashboard exposes provider readiness and the resulting trust contract with schema, citation, approved-action, and advisory-only indicators.
+The test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, ground-truth isolation, server rendering, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. The dashboard exposes provider readiness and the resulting trust contract with schema, citation, approved-action, and advisory-only indicators.
 
 ## Implementation warning
 

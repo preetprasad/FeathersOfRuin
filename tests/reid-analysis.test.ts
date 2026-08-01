@@ -3,6 +3,7 @@ import test from "node:test";
 import sensorData from "../locations/reid-library/data/processed/reid_library_sensor_data.json";
 import {
   backtestDetector,
+  buildIncidentTimeline,
   detectEpisodes,
   prepareSensorData,
   runDetector,
@@ -40,4 +41,29 @@ test("surfaces all supplied unsafe hours with no more than the six missing-data 
 test("does not read system_status while deriving a row detection", () => {
   const altered = rows.map((row) => ({ ...row, status: "stable" as const }));
   assert.deepEqual(runDetector(altered), detections);
+});
+
+test("builds calculated warning timelines for both recorded water failures", () => {
+  const waterEpisodes = detectEpisodes(detections).filter((episode) => episode.kind === "water");
+  const timelines = waterEpisodes.map((episode) => buildIncidentTimeline(episode, rows, detections));
+  assert.deepEqual(timelines.map((timeline) => timeline.map((item) => item.label)), [
+    ["Listener watch", "Corroborated warning", "Critical threshold", "Recorded failure"],
+    ["Listener watch", "Corroborated warning", "Critical threshold", "Recorded failure"],
+  ]);
+  assert.deepEqual(timelines.map((timeline) => {
+    const failureAt = timeline.at(-1)!.timestamp.getTime();
+    return timeline.map((item) => (failureAt - item.timestamp.getTime()) / 3_600_000);
+  }), [
+    [24, 23, 13, 0],
+    [24, 21, 14, 0],
+  ]);
+  assert.ok(timelines.every((timeline) => timeline.at(-1)?.source === "evaluation"));
+});
+
+test("shows ventilation warning onset, worst efficiency, and recovery", () => {
+  const ventilationEpisodes = detectEpisodes(detections).filter((episode) => episode.kind === "ventilation");
+  const timelines = ventilationEpisodes.map((episode) => buildIncidentTimeline(episode, rows, detections));
+  assert.ok(timelines.every((timeline) => timeline[0].label === "Efficiency warning"));
+  assert.ok(timelines.every((timeline) => timeline.some((item) => item.label === "Lowest efficiency")));
+  assert.ok(timelines.every((timeline) => timeline.at(-1)?.label === "Warning cleared"));
 });
