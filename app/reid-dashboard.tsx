@@ -4,6 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 import sensorData from "../locations/reid-library/data/processed/reid_library_sensor_data.json";
 import { ACTION_CATALOG, presentIncidentBrief, type BriefingRequest, type IncidentBrief } from "../lib/reid-briefing";
 import {
+  AUDIT_STORAGE_KEY,
+  OPERATOR_ACTION_LABELS,
+  OPERATOR_ACTIONS,
+  createAuditEntry,
+  parseAuditLog,
+  resolveAuditEntry,
+  serializeAuditLog,
+  type OperatorActionId,
+  type OperatorAuditEntry,
+} from "../lib/reid-audit";
+import {
   airflowResidual,
   analyzeDetectorSensitivity,
   backtestDetector,
@@ -57,6 +68,14 @@ function extrema(values: Array<number | null>, mode: "min" | "max") {
 
 function format(value: number | null, digits = 1) {
   return value === null ? "—" : value.toFixed(digits);
+}
+
+function auditTimestamp(value: string) {
+  return new Intl.DateTimeFormat("en-AU", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Australia/Perth",
+  }).format(new Date(value));
 }
 
 function chartValue(row: SensorRow, key: string) {
@@ -253,7 +272,12 @@ export function ReidDashboard() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [providerHealth, setProviderHealth] = useState<ProviderHealth | null>(null);
-  const [decisions, setDecisions] = useState<Record<string, string>>({});
+  const [auditEntries, setAuditEntries] = useState<OperatorAuditEntry[]>([]);
+  const [auditReady, setAuditReady] = useState(false);
+  const [operatorName, setOperatorName] = useState("Reid duty coordinator");
+  const [selectedAction, setSelectedAction] = useState<OperatorActionId | null>(null);
+  const [decisionRationale, setDecisionRationale] = useState("");
+  const [resolutionNotes, setResolutionNotes] = useState<Record<string, string>>({});
   const episode = (episodes.find((item) => item.id === episodeId) || episodes[2] || episodes[0])!;
 
   useEffect(() => {
@@ -270,6 +294,14 @@ export function ReidDashboard() {
         if (active) setProviderHealth(null);
       });
     return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    const loadAudit = window.setTimeout(() => {
+      setAuditEntries(parseAuditLog(window.localStorage.getItem(AUDIT_STORAGE_KEY)));
+      setAuditReady(true);
+    }, 0);
+    return () => window.clearTimeout(loadAudit);
   }, []);
 
   const rows = useMemo(() => {
@@ -309,7 +341,8 @@ export function ReidDashboard() {
   const visibleAiMode = aiIncidentId === episode.id ? aiMode : null;
   const visibleAiProvider = aiIncidentId === episode.id ? aiProvider : null;
   const visibleAiError = aiIncidentId === episode.id ? aiError : null;
-  const decision = decisions[episode.id] || null;
+  const incidentAuditEntries = auditEntries.filter((entry) => entry.incidentId === episode.id);
+  const availableActions = OPERATOR_ACTIONS[episode.kind];
 
   const briefingInput: BriefingRequest = {
     incidentId: episode.id,
@@ -352,14 +385,46 @@ export function ReidDashboard() {
     }
   }
 
-  function recordDecision(value: string) {
-    const record = `${value} · ${new Intl.DateTimeFormat("en-AU", {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: "Australia/Perth",
-    }).format(new Date())}`;
-    window.localStorage.setItem(`reid-decision:${episode.id}`, record);
-    setDecisions((current) => ({ ...current, [episode.id]: record }));
+  function saveAuditEntries(entries: OperatorAuditEntry[]) {
+    window.localStorage.setItem(AUDIT_STORAGE_KEY, serializeAuditLog(entries));
+    setAuditEntries(entries);
+  }
+
+  function recordAuditDecision(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!auditReady || !selectedAction || operatorName.trim().length < 2 || decisionRationale.trim().length < 3) return;
+    const entry = createAuditEntry({
+      incidentId: episode.id,
+      incidentLabel: episode.label,
+      incidentLevel: episode.level,
+      incidentKind: episode.kind,
+      actionId: selectedAction,
+      operator: operatorName.trim(),
+      rationale: decisionRationale.trim(),
+      evidenceIds: episodeEvidence.map((signal) => signal.id),
+      aiMode: visibleAiMode || "not-generated",
+      aiProvider: visibleAiProvider || "No AI briefing generated",
+    });
+    saveAuditEntries([entry, ...auditEntries].slice(0, 100));
+    setSelectedAction(null);
+    setDecisionRationale("");
+  }
+
+  function closeAuditEntry(entryId: string) {
+    const note = resolutionNotes[entryId]?.trim() || "";
+    if (operatorName.trim().length < 2 || note.length < 3) return;
+    saveAuditEntries(resolveAuditEntry(auditEntries, entryId, operatorName, note));
+    setResolutionNotes((current) => ({ ...current, [entryId]: "" }));
+  }
+
+  function exportAuditLog() {
+    const blob = new Blob([serializeAuditLog(auditEntries)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "reid-sentinel-operator-audit.json";
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -413,7 +478,11 @@ export function ReidDashboard() {
                   aria-pressed={item.id === episodeId}
                   className="episode-button"
                   key={item.id}
-                  onClick={() => setEpisodeId(item.id)}
+                  onClick={() => {
+                    setEpisodeId(item.id);
+                    setSelectedAction(null);
+                    setDecisionRationale("");
+                  }}
                   type="button"
                 >
                   <span className={`severity ${item.kind === "water" ? "failure" : "warning"}`}>
@@ -549,18 +618,116 @@ export function ReidDashboard() {
 
             <SensitivityPanel profiles={sensitivityProfiles} />
 
-            <section className="panel operator-panel">
-              <div>
-                <span className="eyebrow">Human decision checkpoint</span>
-                <h2>A coordinator remains in control</h2>
-                <p>AI recommendations do not change building systems. Record the next reversible response for the incident log.</p>
+            <section className="panel operator-audit-panel">
+              <div className="audit-heading">
+                <div>
+                  <span className="eyebrow">Human decision checkpoint · device-local prototype</span>
+                  <h2>Operator decision audit</h2>
+                  <p>AI remains advisory. Every recorded response preserves the operator, rationale, detector evidence, and AI provenance present at the decision.</p>
+                </div>
+                <div className="audit-summary" aria-label="Audit summary">
+                  <strong>{incidentAuditEntries.length}</strong>
+                  <span>incident records</span>
+                  <button disabled={!auditEntries.length} onClick={exportAuditLog} type="button">Export all JSON</button>
+                </div>
               </div>
-              <div className="decision-actions" aria-label="Record response decision">
-                <button onClick={() => recordDecision("Inspect systems")} type="button">Inspect systems</button>
-                <button onClick={() => recordDecision("Prepare manual supply")} type="button">Prepare manual supply</button>
-                <button onClick={() => recordDecision("Notify vulnerable residents")} type="button">Notify residents</button>
+
+              <div className="audit-workspace">
+                <form className="audit-form" onSubmit={recordAuditDecision}>
+                  <h3>Record a reversible response</h3>
+                  <label>
+                    Operator
+                    <input maxLength={80} onChange={(event) => setOperatorName(event.target.value)} required value={operatorName} />
+                  </label>
+                  <fieldset>
+                    <legend>Selected response</legend>
+                    <div className="decision-actions">
+                      {availableActions.map((actionId) => (
+                        <button
+                          aria-pressed={selectedAction === actionId}
+                          key={actionId}
+                          onClick={() => setSelectedAction(actionId)}
+                          type="button"
+                        >
+                          {OPERATOR_ACTION_LABELS[actionId]}
+                        </button>
+                      ))}
+                    </div>
+                    {selectedAction && <p className="selected-action-detail">{ACTION_CATALOG[selectedAction]}</p>}
+                  </fieldset>
+                  <label>
+                    Decision rationale
+                    <textarea
+                      maxLength={280}
+                      onChange={(event) => setDecisionRationale(event.target.value)}
+                      placeholder="Why is this the safest reversible next step?"
+                      required
+                      rows={3}
+                      value={decisionRationale}
+                    />
+                  </label>
+                  <button
+                    className="record-audit-button"
+                    disabled={!auditReady || !selectedAction || operatorName.trim().length < 2 || decisionRationale.trim().length < 3}
+                    type="submit"
+                  >
+                    Commit decision record
+                  </button>
+                  <p className="audit-storage-note">Stored only in this browser for the hackathon demo. Export before changing devices or clearing browser data.</p>
+                </form>
+
+                <div className="audit-log" aria-live="polite">
+                  <div className="audit-log-heading">
+                    <h3>{episode.label} history</h3>
+                    <span>{auditReady ? `${incidentAuditEntries.filter((entry) => !entry.resolution).length} open` : "Loading…"}</span>
+                  </div>
+                  {!incidentAuditEntries.length ? (
+                    <div className="audit-empty">
+                      <strong>No decisions recorded</strong>
+                      <p>Choose a response and explain why. The incident evidence snapshot will be attached automatically.</p>
+                    </div>
+                  ) : incidentAuditEntries.map((entry, index) => (
+                    <article className={`audit-entry ${entry.resolution ? "resolved" : "open"}`} key={entry.id}>
+                      <div className="audit-entry-heading">
+                        <span>Decision {String(incidentAuditEntries.length - index).padStart(2, "0")}</span>
+                        <strong>{entry.resolution ? "resolved" : "open"}</strong>
+                      </div>
+                      <h4>{OPERATOR_ACTION_LABELS[entry.actionId]}</h4>
+                      <p>{entry.rationale}</p>
+                      <div className="audit-meta">{entry.operator} · {auditTimestamp(entry.createdAt)}</div>
+                      <ul className="audit-snapshot" aria-label="Decision evidence snapshot">
+                        <li>balanced detector</li>
+                        <li>{entry.evidenceIds.length} evidence signals</li>
+                        <li>{entry.aiMode === "not-generated" ? "AI not generated" : `${entry.aiMode} · ${entry.aiProvider}`}</li>
+                      </ul>
+                      {entry.resolution ? (
+                        <div className="resolution-record">
+                          <strong>Resolution</strong>
+                          <p>{entry.resolution.note}</p>
+                          <span>{entry.resolution.operator} · {auditTimestamp(entry.resolution.resolvedAt)}</span>
+                        </div>
+                      ) : (
+                        <div className="resolution-form">
+                          <input
+                            aria-label={`Resolution note for ${OPERATOR_ACTION_LABELS[entry.actionId]}`}
+                            maxLength={280}
+                            onChange={(event) => setResolutionNotes((current) => ({ ...current, [entry.id]: event.target.value }))}
+                            placeholder="Outcome or handover note"
+                            value={resolutionNotes[entry.id] || ""}
+                          />
+                          <button
+                            disabled={operatorName.trim().length < 2 || (resolutionNotes[entry.id]?.trim().length || 0) < 3}
+                            onClick={() => closeAuditEntry(entry.id)}
+                            type="button"
+                          >
+                            Resolve
+                          </button>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
               </div>
-              <p className="decision-record">{decision ? `Recorded: ${decision}` : "No response recorded for this incident."}</p>
             </section>
 
             <section className="method-strip" aria-label="Detection method">

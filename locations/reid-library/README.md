@@ -183,7 +183,7 @@ Current capabilities:
 - Uses a token-protected 4Freshers Ollama bridge as the primary model in the public demo
 - Fails over to Claude Haiku when Ollama is unavailable, then to validated deterministic decision support if every model is unavailable
 - Displays live primary, hosted-secondary, and guaranteed-fallback readiness in the dashboard
-- Lets a maintenance coordinator record a reversible response while keeping AI out of direct system control
+- Gives the coordinator an incident-specific audit workflow that records operator identity, rationale, evidence and AI provenance, resolution notes, and an exportable decision history while keeping AI out of direct system control
 
 ### Measured detector result
 
@@ -267,6 +267,33 @@ Provider order:
 Ollama primary → Claude hosted fallback → optional Vercel AI Gateway → deterministic safe mode
 ```
 
+### Operator decision audit workflow
+
+The final decision remains with a human coordinator. For each incident, the interface offers only reversible, incident-appropriate responses: water incidents receive water actions, while ventilation incidents receive ventilation and verification actions. A response cannot be committed until the coordinator supplies an operator name, selects an action, and writes a rationale.
+
+Each decision record preserves:
+
+- Incident ID, label, level, and infrastructure type
+- Selected approved action
+- Operator name, rationale, and Australia/Perth display time backed by an ISO timestamp
+- The active `balanced` detector profile
+- Exact detector evidence IDs visible when the decision was made
+- Whether an AI brief had been generated, plus its live or fallback mode and provider
+- Open or resolved status
+- Resolution operator, outcome or handover note, and resolution timestamp
+
+Open decisions can be resolved only after an outcome or handover note is entered. The original action, rationale, evidence snapshot, and creation timestamp remain unchanged. The complete log can be exported as versioned JSON for judging or later analysis. Malformed stored records are rejected instead of being displayed as trusted history, and the device keeps no more than 100 entries.
+
+This hackathon implementation deliberately labels the log as a **device-local prototype**. It survives refreshes in the same browser, but it is not a tamper-resistant, multi-user production audit system. Production would require authenticated operator identities, server-side append-only storage, access control, retention policy, clock controls, and independently reviewable change history.
+
+Suggested demo flow:
+
+1. Open a water failure and generate or review its evidence brief.
+2. Select a reversible response, enter the coordinator's rationale, and commit it.
+3. Show the attached balanced-detector, evidence-count, and AI-provenance snapshot.
+4. Enter a handover or outcome note and resolve the record.
+5. Export the complete JSON audit log.
+
 Local Claude configuration belongs only in the ignored `.env.local` file:
 
 ```dotenv
@@ -308,7 +335,7 @@ npm test
 npx next build
 ```
 
-The test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, ground-truth isolation, server rendering, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. The dashboard exposes provider readiness and the resulting trust contract with schema, citation, approved-action, and advisory-only indicators.
+The test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, server rendering, audit evidence and AI provenance capture, resolution integrity, malformed local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. The dashboard exposes provider readiness and the resulting trust contract with schema, citation, approved-action, and advisory-only indicators.
 
 ## Implementation warning
 

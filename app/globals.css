@@ -1018,6 +1018,318 @@ button {
   font-family: var(--font-geist-mono), monospace;
 }
 
+.operator-audit-panel {
+  margin-top: 20px;
+}
+
+.audit-heading {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto;
+  gap: 28px;
+  align-items: end;
+}
+
+.audit-heading h2 {
+  margin: 6px 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(25px, 3vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.audit-heading p,
+.audit-storage-note,
+.audit-empty p,
+.audit-entry > p,
+.resolution-record p {
+  margin: 0;
+  color: var(--paper-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.audit-summary {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 3px 8px;
+  min-width: 168px;
+}
+
+.audit-summary strong {
+  color: var(--mint);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 24px;
+}
+
+.audit-summary span {
+  color: var(--paper-muted);
+  font-size: 9px;
+}
+
+.audit-summary button {
+  grid-column: 1 / -1;
+}
+
+.audit-summary button,
+.record-audit-button,
+.resolution-form button {
+  padding: 9px 12px;
+  border: 1px solid rgb(158 231 192 / 0.28);
+  border-radius: 8px;
+  background: rgb(158 231 192 / 0.07);
+  color: var(--mint);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.audit-summary button:disabled,
+.record-audit-button:disabled,
+.resolution-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.audit-workspace {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.72fr) minmax(360px, 1.28fr);
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.audit-form,
+.audit-log {
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgb(16 23 21 / 0.62);
+}
+
+.audit-form {
+  align-self: start;
+}
+
+.audit-form h3,
+.audit-log h3,
+.audit-entry h4 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.audit-form label,
+.audit-form legend {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+  color: var(--paper-muted);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.audit-form fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.audit-form input,
+.audit-form textarea,
+.resolution-form input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  outline: none;
+  background: var(--ink-soft);
+  color: var(--paper);
+  font: inherit;
+}
+
+.audit-form input,
+.audit-form textarea {
+  padding: 10px 11px;
+  font-size: 11px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.audit-form textarea {
+  resize: vertical;
+}
+
+.audit-form input:focus,
+.audit-form textarea:focus,
+.resolution-form input:focus {
+  border-color: rgb(121 185 208 / 0.65);
+  box-shadow: 0 0 0 3px rgb(121 185 208 / 0.08);
+}
+
+.audit-form .decision-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.audit-form .decision-actions button {
+  text-align: left;
+}
+
+.audit-form .decision-actions button[aria-pressed="true"] {
+  border-color: rgb(158 231 192 / 0.55);
+  background: rgb(158 231 192 / 0.12);
+  color: var(--mint);
+}
+
+.selected-action-detail {
+  margin: 8px 0 0;
+  color: var(--blue);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.record-audit-button {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.audit-storage-note {
+  margin-top: 10px;
+  color: #78827d;
+  font-size: 9px;
+}
+
+.audit-log-heading,
+.audit-entry-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.audit-log-heading > span,
+.audit-entry-heading,
+.audit-meta,
+.resolution-record span {
+  color: var(--paper-muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+.audit-empty {
+  margin-top: 14px;
+  padding: 24px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.audit-empty strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.audit-entry {
+  position: relative;
+  margin-top: 10px;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--ink-soft);
+}
+
+.audit-entry::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: var(--amber);
+  content: "";
+}
+
+.audit-entry.resolved::before {
+  background: var(--mint);
+}
+
+.audit-entry-heading {
+  text-transform: uppercase;
+}
+
+.audit-entry-heading strong {
+  color: var(--amber);
+  font-size: 8px;
+  font-weight: 500;
+}
+
+.audit-entry.resolved .audit-entry-heading strong {
+  color: var(--mint);
+}
+
+.audit-entry h4 {
+  margin-top: 9px;
+}
+
+.audit-entry > p {
+  margin-top: 5px;
+}
+
+.audit-meta {
+  margin-top: 9px;
+}
+
+.audit-snapshot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.audit-snapshot li {
+  padding: 4px 6px;
+  border: 1px solid rgb(121 185 208 / 0.18);
+  border-radius: 999px;
+  color: var(--blue);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 7px;
+}
+
+.resolution-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.resolution-form input {
+  min-width: 0;
+  padding: 8px 9px;
+  font-size: 9px;
+}
+
+.resolution-record {
+  margin-top: 11px;
+  padding: 10px;
+  border-left: 2px solid var(--mint);
+  background: rgb(158 231 192 / 0.05);
+}
+
+.resolution-record strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--mint);
+  font-size: 9px;
+}
+
+.resolution-record span {
+  display: block;
+  margin-top: 6px;
+}
+
 .method-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1078,7 +1390,9 @@ button {
   .validation-panel,
   .operator-panel,
   .timeline-heading,
-  .sensitivity-heading {
+  .sensitivity-heading,
+  .audit-heading,
+  .audit-workspace {
     grid-template-columns: 1fr;
   }
 
@@ -1133,6 +1447,10 @@ button {
 
   .footer-note {
     flex-direction: column;
+  }
+
+  .resolution-form {
+    grid-template-columns: 1fr;
   }
 
   .incident-timeline {
