@@ -49,6 +49,7 @@ The Matilda Bay and Sunken Garden workspaces remain research references. They ar
 - [Interactive campus map](https://ultimate-hackathon.vercel.app/map)
 - [Side-quest board](https://ultimate-hackathon.vercel.app/side-quests)
 - [Live Reid Sentinel dashboard](https://reid-sentinel.vercel.app/)
+- [Interactive Reid Sentinel presentation](https://reid-sentinel.vercel.app/presentation) — guided concepts, live analysis controls, calculated results, and exact source links
 - [Reid Sentinel project record](locations/reid-library/PROJECT_RECORD.md) — decisions, pivots, milestones, risks, takeaways, and action plan
 - [Event datasets](https://drive.google.com/drive/folders/1PhiIBZ-ngRpJv91hGCu_9vg9zpwcYfbp?usp=sharing)
 
@@ -1315,7 +1316,7 @@ Decision our product improves: Whether current evidence requires investigation, 
 Data files/columns needed: reid_library_sensor_data.csv; cloudys_logs.md; timestamp, power, airflow, water pressure, water flow, temperature, vibration, sound, status, and sensor source
 Core calculation or analytical method: Source normalisation, healthy airflow baseline, three-hour water change, airflow residual, cross-signal corroboration, episode discovery, backtesting, sensitivity analysis, and averaged pre-failure signature
 AI task: Convert only validated incident evidence into a schema-constrained, cited, uncertainty-aware action brief
-Main interface: Reid Sentinel early-warning evidence console with incident archive, signal charts, method visual, timelines, detector explanations, AI brief, and operator audit
+Main interface: Reid Sentinel early-warning evidence console plus a dedicated interactive presentation with concept labs, calculated result visualisations, and exact implementation links
 Definition of done: A coordinator can see an approaching failure, understand the evidence and method, obtain a safe brief, and record a reversible response
 Demo owner: To be assigned by Team 4Freshers before judging
 ```

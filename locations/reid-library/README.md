@@ -168,8 +168,12 @@ The complete judged workflow is implemented as the repository's main web applica
 
 **Live public dashboard:** [reid-sentinel.vercel.app](https://reid-sentinel.vercel.app/)
 
+**Interactive presentation:** [reid-sentinel.vercel.app/presentation](https://reid-sentinel.vercel.app/presentation)
+
 Current capabilities:
 
+- Provides an 11-section, keyboard-controlled presentation mode inside the same application, with interactive residual, corroboration, trust-gate, and threshold-profile demonstrations driven by the production analysis functions
+- Links every presented data-science concept to stable, exact lines in the checked-in implementation and transitions directly into the live evidence console
 - Opens with a skippable cinematic campus sequence that zooms from the UWA field map into Reid Library, visualises the feather strike and infrastructure failure, introduces Cloudy, and hands off to the evidence console
 - Presents the complete five-stage analysis method beside a calculated 24-hour signature averaged across both recorded failures
 - Replays both recorded water failures side by side, exposing the calculated listener-watch, corroborated-warning, critical, and failure timestamps
@@ -224,7 +228,17 @@ The intro includes a persistent **Skip intro** control, supports the Escape key,
 
 ### Presentation-ready analysis method
 
-The dashboard brings the method and the result together in one judge-facing component instead of expecting the presenter to assemble the explanation from separate panels.
+The dashboard brings the method and the result together in one judge-facing component instead of expecting the presenter to assemble the explanation from separate panels. The dedicated `/presentation` route expands that explanation into a guided sequence covering the problem, interpretation, analysis pipeline, interactive concepts, calculated results, implementation boundaries, and operational outcome.
+
+Presentation controls support the left and right arrow keys, up and down arrows, Page Up, Page Down, Space, Home, End, the on-screen controls, and direct slide navigation. Each section has a stable hash link. On mobile, the presentation becomes a natural vertical document instead of forcing slide-sized content into a small viewport.
+
+The interactive sections are not separately maintained mock calculations:
+
+- the failure signature calls `buildFailureSignature` over the checked-in dataset;
+- validation calls `analyzeDetectorSensitivity` for every profile;
+- the trust scenarios call `applySensorTrustScenario` and `analyzeSensorTrust`;
+- opening and outcome metrics call the same episode and backtest functions as the dashboard; and
+- residual and corroboration labs expose the deployed balanced boundaries beside stable links to their exact source lines.
 
 The five displayed stages are:
 
@@ -404,7 +418,7 @@ npm test
 npx next build
 ```
 
-The 33-test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, metric display rounding, server rendering, audit evidence and AI provenance capture, immutable first resolution, malformed and oversized local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. Trust-gate edge cases include absent sources, missing channels, timestamp gaps and duplicates, impossible readings, frozen sensors, and unstable calibration drift; the interactive stress controls are verified against the same fail-closed analysis used by the baseline gate. Detector edge cases include sound-only reports and uncorroborated pressure-and-flow trends.
+The 34-test suite covers incident discovery, calculated incident milestones, lead time, ventilation recovery, false alarms, threshold sensitivity, ground-truth isolation, metric display rounding, server rendering of both the dashboard and interactive presentation, audit evidence and AI provenance capture, immutable first resolution, malformed and oversized local audit data, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. Trust-gate edge cases include absent sources, missing channels, timestamp gaps and duplicates, impossible readings, frozen sensors, and unstable calibration drift; the interactive stress controls are verified against the same fail-closed analysis used by the baseline gate. Detector edge cases include sound-only reports and uncorroborated pressure-and-flow trends.
 
 ## Implementation warning
 

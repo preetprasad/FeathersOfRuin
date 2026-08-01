@@ -4,13 +4,13 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-async function render() {
+async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", {
+    new Request(`http://localhost${pathname}`, {
       headers: { accept: "text/html", host: "localhost" },
     }),
     {
@@ -41,6 +41,20 @@ test("server-renders the Reid Sentinel product", async () => {
   assert.match(html, /300\/300 values/);
   assert.match(html, /og\.png/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
+});
+
+test("server-renders the interactive presentation from real analysis results", async () => {
+  const response = await render("/presentation");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Interactive presentation · Reid Sentinel/);
+  assert.match(html, /Five reproducible steps/);
+  assert.match(html, /Residual analysis/);
+  assert.match(html, /Sensor Trust Gate/);
+  assert.match(html, /21–23 hours to act/);
+  assert.match(html, /Open exact lines/);
+  assert.match(html, /Juan Enrique Somadinata/);
 });
 
 test("keeps the evidence source and starter preview out of the finished product", async () => {
