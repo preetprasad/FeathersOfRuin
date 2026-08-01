@@ -168,6 +168,7 @@ The complete judged workflow is implemented as the repository's main web applica
 
 Current capabilities:
 
+- Opens with a skippable cinematic campus sequence that zooms from the UWA field map into Reid Library, visualises the feather strike and infrastructure failure, introduces Cloudy, and hands off to the evidence console
 - Loads all 500 event records from the checked-in CSV
 - Normalises the truncated `barry_j_` sensor identity
 - Automatically discovers two failures and two ventilation warnings instead of relying on hard-coded incident windows
@@ -199,6 +200,18 @@ The checked-in automated tests currently establish:
 | Explanation for extra watches | The six supplied missing numeric readings |
 
 These are results on the supplied historical event data, not claims about general performance on future building data.
+
+### Cinematic opening and accessibility
+
+On a visitor's first load in a browser session, Reid Sentinel presents an approximately nine-second story sequence:
+
+```text
+UWA campus map → Reid Library zoom → feather strike → power/ventilation/water faults → Cloudy arrives → evidence console
+```
+
+The map is an original HTML/CSS interpretation of the hackathon's north-up field-map visual language rather than a copied screenshot. It identifies the main survivor regions and locates Reid Library before the camera closes in on the selected challenge. The official Cloudy mascot artwork is loaded from the hackathon website so the transition remains connected to the event story.
+
+The intro includes a persistent **Skip intro** control, supports the Escape key, runs only once per browser session, and can be restarted from **Replay story** in the dashboard header. Visitors who request reduced motion bypass the animation automatically. The animation communicates narrative context only; no evidence or operating controls are hidden behind it.
 
 ### Calculated incident timeline
 

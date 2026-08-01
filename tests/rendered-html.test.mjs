@@ -70,6 +70,10 @@ test("keeps the evidence source and starter preview out of the finished product"
   assert.match(dashboard, /Commit decision record/);
   assert.match(dashboard, /Export all JSON/);
   assert.match(dashboard, /device-local prototype/);
+  assert.match(dashboard, /Reid Library disaster story/);
+  assert.match(dashboard, /Skip intro/);
+  assert.match(dashboard, /Replay story/);
+  assert.match(dashboard, /Enter evidence console/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton|drizzle/);
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });

@@ -35,6 +35,80 @@ type ProviderHealth = {
   guaranteedFallback: { provider: string; status: "available" };
 };
 
+const INTRO_STORAGE_KEY = "reid-sentinel:intro-seen:v1";
+
+const campusBuildings = [
+  [35, 12, 11, 7], [50, 11, 12, 8], [66, 14, 10, 6], [29, 23, 12, 7],
+  [45, 24, 14, 8], [64, 25, 13, 7], [25, 36, 11, 8], [42, 37, 13, 8],
+  [61, 37, 12, 8], [31, 50, 13, 7], [49, 51, 12, 7], [67, 50, 11, 8],
+  [25, 64, 12, 8], [42, 64, 14, 8], [62, 65, 13, 8], [32, 78, 12, 7],
+  [49, 79, 13, 7], [67, 79, 10, 8],
+] as const;
+
+function CinematicIntro({ cycle, onComplete }: { cycle: number; onComplete: () => void }) {
+  return (
+    <section
+      aria-label="Reid Library disaster story"
+      className="cinematic-intro"
+      key={cycle}
+    >
+      <button className="intro-skip" onClick={onComplete} type="button">Skip intro</button>
+      <div className="intro-film-grain" />
+      <div className="intro-map-camera">
+        <div className="intro-map-world">
+          <span className="intro-road intro-road-north">Stirling Highway</span>
+          <span className="intro-road intro-road-west">Fairway</span>
+          <span className="intro-road intro-road-east">Hackett Drive</span>
+          <div className="intro-river" />
+          <div className="intro-campus">
+            <div className="intro-campus-grid" />
+            {campusBuildings.map(([left, top, width, height], index) => (
+              <span
+                className={`intro-building ${index === 7 ? "reid-building" : ""}`}
+                key={`${left}-${top}`}
+                style={{ left: `${left}%`, top: `${top}%`, width: `${width}%`, height: `${height}%` }}
+              />
+            ))}
+            <div className="intro-landmark winthrop"><i />Winthrop Hall</div>
+            <div className="intro-landmark great-court"><i />Great Court</div>
+            <div className="intro-landmark sunken"><i>R</i><span>Sunken Garden</span></div>
+            <div className="intro-landmark computer-science"><i>CS</i><span>Computer Science</span></div>
+            <div className="intro-landmark reid"><i>RS</i><span>Reid Library</span><small>Dragon shelter</small></div>
+            <div className="intro-landmark matilda"><i>O</i><span>Matilda Bay</span></div>
+            <div className="intro-threat-route"><span /><span /><span /><span /></div>
+          </div>
+          <div className="intro-map-caption">UWA Crawley · north-up field map</div>
+        </div>
+      </div>
+
+      <div className="impact-flash" />
+      <div className="impact-ring ring-one" />
+      <div className="impact-ring ring-two" />
+      <div className="feather-strikes" aria-hidden="true">
+        <i /><i /><i /><i /><i />
+      </div>
+      <div className="system-failures" aria-hidden="true">
+        <span>POWER · FAULT</span>
+        <span>VENTILATION · DEGRADED</span>
+        <span>WATER · PRESSURE LOSS</span>
+      </div>
+      <div className="intro-cloudy" aria-label="Cloudy the Reid Library dragon" role="img" />
+
+      <div className="intro-narrative" aria-live="off">
+        <p className="intro-line line-one">UWA Crawley · after the feathers fell</p>
+        <p className="intro-line line-two">Reid Library became a shelter.</p>
+        <p className="intro-line line-three">Then its essential systems began to fail.</p>
+        <div className="intro-title-lockup">
+          <span>4Freshers presents</span>
+          <strong>REID SENTINEL</strong>
+          <p>Failure had a shape. Now we can see it coming.</p>
+        </div>
+      </div>
+      <button className="intro-enter" onClick={onComplete} type="button">Enter evidence console</button>
+    </section>
+  );
+}
+
 const metricGroups = {
   water: [
     { key: "pressure", label: "Water pressure", color: "#79b9d0" },
@@ -278,6 +352,8 @@ export function ReidDashboard() {
   const [selectedAction, setSelectedAction] = useState<OperatorActionId | null>(null);
   const [decisionRationale, setDecisionRationale] = useState("");
   const [resolutionNotes, setResolutionNotes] = useState<Record<string, string>>({});
+  const [introVisible, setIntroVisible] = useState(true);
+  const [introCycle, setIntroCycle] = useState(0);
   const episode = (episodes.find((item) => item.id === episodeId) || episodes[2] || episodes[0])!;
 
   useEffect(() => {
@@ -295,6 +371,34 @@ export function ReidDashboard() {
       });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!introVisible) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const alreadySeen = window.sessionStorage.getItem(INTRO_STORAGE_KEY) === "true";
+    if (reducedMotion || alreadySeen) {
+      const hideIntro = window.setTimeout(() => setIntroVisible(false), 0);
+      return () => window.clearTimeout(hideIntro);
+    }
+
+    document.body.classList.add("intro-playing");
+    const finishTimer = window.setTimeout(() => {
+      window.sessionStorage.setItem(INTRO_STORAGE_KEY, "true");
+      setIntroVisible(false);
+    }, 8_600);
+    const skipOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        window.sessionStorage.setItem(INTRO_STORAGE_KEY, "true");
+        setIntroVisible(false);
+      }
+    };
+    window.addEventListener("keydown", skipOnEscape);
+    return () => {
+      document.body.classList.remove("intro-playing");
+      window.clearTimeout(finishTimer);
+      window.removeEventListener("keydown", skipOnEscape);
+    };
+  }, [introCycle, introVisible]);
 
   useEffect(() => {
     const loadAudit = window.setTimeout(() => {
@@ -427,8 +531,20 @@ export function ReidDashboard() {
     URL.revokeObjectURL(url);
   }
 
+  function finishIntro() {
+    window.sessionStorage.setItem(INTRO_STORAGE_KEY, "true");
+    setIntroVisible(false);
+  }
+
+  function replayIntro() {
+    window.sessionStorage.removeItem(INTRO_STORAGE_KEY);
+    setIntroVisible(true);
+    setIntroCycle((current) => current + 1);
+  }
+
   return (
     <div className="app-shell">
+      {introVisible && <CinematicIntro cycle={introCycle} onComplete={finishIntro} />}
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark">RS</span>
@@ -436,6 +552,7 @@ export function ReidDashboard() {
           <span>/ essential systems</span>
         </div>
         <div className="topbar-status">
+          <button className="replay-intro" onClick={replayIntro} type="button">Replay story</button>
           <div className={`provider-health ${providerHealth?.primary.status || "checking"}`} aria-live="polite">
             <span />
             {!providerHealth
