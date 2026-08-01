@@ -42,16 +42,20 @@ test("server-renders the Reid Sentinel product", async () => {
 });
 
 test("keeps the evidence source and starter preview out of the finished product", async () => {
-  const [page, dashboard, packageJson] = await Promise.all([
+  const [page, dashboard, briefingRoute, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/reid-dashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/briefing/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /<ReidDashboard \/>/);
   assert.match(dashboard, /system_status/);
   assert.match(dashboard, /airflowResidual/);
-  assert.match(dashboard, /deterministic briefing fallback/);
+  assert.match(dashboard, /Generate live AI briefing/);
+  assert.match(briefingRoute, /generateText/);
+  assert.match(briefingRoute, /Vercel AI Gateway/);
+  assert.match(briefingRoute, /Local Ollama/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton|drizzle/);
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });

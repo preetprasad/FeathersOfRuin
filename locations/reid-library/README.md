@@ -162,7 +162,7 @@ The first milestone should:
 
 ## Reid Sentinel implementation status
 
-The first milestone is implemented as the repository's main web application.
+The complete judged workflow is implemented as the repository's main web application.
 
 **Live public dashboard:** [reid-sentinel.vercel.app](https://reid-sentinel.vercel.app/)
 
@@ -170,15 +170,68 @@ Current capabilities:
 
 - Loads all 500 event records from the checked-in CSV
 - Normalises the truncated `barry_j_` sensor identity
-- Provides historical playback for two failures and two ventilation warnings
+- Automatically discovers two failures and two ventilation warnings instead of relying on hard-coded incident windows
 - Switches between water, ventilation, and shelter signal views
 - Calculates the healthy power-to-airflow relationship and corrects the known Barry J airflow offset
 - Surfaces water decline, vibration, listener observations, missing values, and temperature consequence
 - Keeps `system_status` as an evaluation ribbon rather than using it as detector input
-- Produces a deterministic incident briefing fallback from validated evidence
-- Documents the contract for the future LLM briefing step
+- Traces every detector signal to the relevant recovered Cloudy note
+- Backtests the detector over all 500 records and displays measured performance
+- Sends a schema-validated evidence object to a live LLM and requires structured, cited output
+- Uses Vercel AI Gateway in production and local Ollama during local development
+- Falls back transparently to deterministic decision support if the model is unavailable
+- Lets a maintenance coordinator record a reversible response while keeping AI out of direct system control
 
-The next implementation phase is to extract the transparent detection rules into tested analysis modules, evaluate their lead time and false alarms across all 500 rows, and connect the validated evidence object to a live LLM call.
+### Measured detector result
+
+The checked-in automated tests currently establish:
+
+| Measure | Result |
+|---|---:|
+| Recorded failure events detected | 2 of 2 |
+| Earliest listener watch before each failure | 24 hours |
+| Corroborated warning before each failure | At least 21 hours |
+| Recall across supplied unsafe hours | 100% |
+| Extra watches | 6 |
+| Explanation for extra watches | The six supplied missing numeric readings |
+
+These are results on the supplied historical event data, not claims about general performance on future building data.
+
+### Transparent detector rules
+
+| Rule | Threshold | Evidence source |
+|---|---|---|
+| Initial watch | Sound differs from `normal`, or a value is missing | Cloudy notes 2 and 5 |
+| Water warning | Pressure drops at least 25 kPa and flow drops at least 0.12 L/s over three hours, corroborated by sound or vibration | Cloudy notes 1 and 2 |
+| Water critical | Pressure below 250 kPa and flow below 1.6 L/s | Cloudy note 1 |
+| Water failed | Pressure at or below 100 kPa and flow at or below 0.35 L/s | Historical failure evidence |
+| Ventilation warning | Airflow residual at or below −0.55 m³/s with vibration at or above 0.25 | Cloudy notes 2 and 3 |
+
+Thresholds are intentionally visible and testable. `system_status` is used only to calculate backtest results after detection.
+
+### Live AI contract
+
+The server sends only a bounded, schema-validated incident evidence object to the model. The model must return:
+
+- A short headline and alert assessment
+- An evidence-grounded summary
+- Two to four prioritised, reversible actions
+- Exact detector signal IDs as citations
+- An explicit uncertainty statement
+
+The endpoint rejects oversized or malformed requests, treats evidence strings as untrusted data, filters invented citation IDs, keeps credentials server-side, and never lets the model operate infrastructure directly.
+
+Production uses the project's automatically provisioned Vercel AI Gateway identity. Local development uses `gemma3:4b` through Ollama by default. These can be changed with `AI_MODEL`, `OLLAMA_MODEL`, or `OLLAMA_BASE_URL` environment variables.
+
+### Verification
+
+```bash
+npm run lint
+npm test
+npx next build
+```
+
+The test suite covers incident discovery, lead time, false alarms, ground-truth isolation, server rendering, and presence of both live AI provider paths.
 
 ## Implementation warning
 

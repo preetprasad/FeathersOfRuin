@@ -2,71 +2,19 @@
 
 import { useMemo, useState } from "react";
 import sensorData from "../locations/reid-library/data/processed/reid_library_sensor_data.json";
-
-type Status = "stable" | "warning" | "critical" | "failed";
-type SensorRow = {
-  timestamp: Date;
-  power: number | null;
-  airflow: number | null;
-  pressure: number | null;
-  flow: number | null;
-  temperature: number | null;
-  vibration: number | null;
-  sound: string;
-  status: Status;
-  source: string;
-};
-
-type Episode = {
-  id: string;
-  label: string;
-  date: string;
-  start: string;
-  end: string;
-  severity: "warning" | "failure";
-  summary: string;
-};
+import { ACTION_CATALOG, presentIncidentBrief, type BriefingRequest, type IncidentBrief } from "../lib/reid-briefing";
+import {
+  airflowResidual,
+  backtestDetector,
+  detectEpisodes,
+  prepareSensorData,
+  runDetector,
+  uniqueEvidence,
+  type RawSensorRecord,
+  type SensorRow,
+} from "../lib/reid-analysis";
 
 type MetricGroup = "water" | "ventilation" | "shelter";
-
-const episodes: Episode[] = [
-  {
-    id: "failure-one",
-    label: "Water failure 01",
-    date: "5–6 July",
-    start: "2026-07-05 00:00:00",
-    end: "2026-07-06 12:00:00",
-    severity: "failure",
-    summary: "Pressure and flow decline for 24 hours before system failure.",
-  },
-  {
-    id: "ventilation-one",
-    label: "Ventilation drift 01",
-    date: "10–11 July",
-    start: "2026-07-10 04:00:00",
-    end: "2026-07-11 10:00:00",
-    severity: "warning",
-    summary: "Power remains high while delivered airflow falls below expectation.",
-  },
-  {
-    id: "failure-two",
-    label: "Water failure 02",
-    date: "15–16 July",
-    start: "2026-07-15 00:00:00",
-    end: "2026-07-16 12:00:00",
-    severity: "failure",
-    summary: "The first failure pattern repeats ten days later.",
-  },
-  {
-    id: "ventilation-two",
-    label: "Ventilation drift 02",
-    date: "18–20 July",
-    start: "2026-07-18 22:00:00",
-    end: "2026-07-20 04:00:00",
-    severity: "warning",
-    summary: "A second efficiency loss overlaps the salvaged sensor handover.",
-  },
-];
 
 const metricGroups = {
   water: [
@@ -82,28 +30,6 @@ const metricGroups = {
     { key: "vibration", label: "Vibration", color: "#ff776d" },
   ],
 } as const;
-
-function parseDate(value: string) {
-  return new Date(`${value.replace(" ", "T")}+08:00`);
-}
-
-function prepareSensorData(): SensorRow[] {
-  return sensorData.map((row) => {
-    const source = row.sensor_source.trim();
-    return {
-      timestamp: parseDate(row.timestamp),
-      power: row.power_kw,
-      airflow: row.airflow_m3s,
-      pressure: row.water_pressure_kpa,
-      flow: row.water_flow_lps,
-      temperature: row.temperature_c,
-      vibration: row.vibration_level,
-      sound: row.sound_event.trim() || "unknown",
-      status: (row.system_status.trim() || "stable") as Status,
-      source: source === "barry_j_" ? "barry_j_smart_sensor" : source,
-    };
-  });
-}
 
 function compactDate(date: Date) {
   return new Intl.DateTimeFormat("en-AU", {
@@ -123,13 +49,6 @@ function extrema(values: Array<number | null>, mode: "min" | "max") {
 
 function format(value: number | null, digits = 1) {
   return value === null ? "—" : value.toFixed(digits);
-}
-
-function airflowResidual(row: SensorRow) {
-  if (row.airflow === null || row.power === null) return null;
-  const calibration = row.source === "barry_j_smart_sensor" ? 0.15 : 0;
-  const expected = 0.125 * row.power - 1.5 + calibration;
-  return row.airflow - expected;
 }
 
 function chartValue(row: SensorRow, key: string) {
@@ -216,16 +135,29 @@ function SignalChart({ rows, group }: { rows: SensorRow[]; group: MetricGroup })
 }
 
 export function ReidDashboard() {
-  const allRows = useMemo(() => prepareSensorData(), []);
-  const [episodeId, setEpisodeId] = useState("failure-two");
+  const allRows = useMemo(() => prepareSensorData(sensorData as RawSensorRecord[]), []);
+  const allDetections = useMemo(() => runDetector(allRows), [allRows]);
+  const episodes = useMemo(() => detectEpisodes(allDetections), [allDetections]);
+  const backtest = useMemo(() => backtestDetector(allRows, allDetections), [allRows, allDetections]);
+  const [episodeId, setEpisodeId] = useState<string | null>(null);
   const [metricGroup, setMetricGroup] = useState<MetricGroup>("water");
-  const episode = episodes.find((item) => item.id === episodeId) || episodes[0];
+  const [aiBrief, setAiBrief] = useState<IncidentBrief | null>(null);
+  const [aiMode, setAiMode] = useState<"live" | "fallback" | null>(null);
+  const [aiProvider, setAiProvider] = useState<string | null>(null);
+  const [aiIncidentId, setAiIncidentId] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [decisions, setDecisions] = useState<Record<string, string>>({});
+  const episode = (episodes.find((item) => item.id === episodeId) || episodes[2] || episodes[0])!;
 
   const rows = useMemo(() => {
-    const start = parseDate(episode.start);
-    const end = parseDate(episode.end);
-    return allRows.filter((row) => row.timestamp >= start && row.timestamp <= end);
+    return allRows.filter((row) => row.timestamp >= episode.start && row.timestamp <= episode.end);
   }, [allRows, episode]);
+  const episodeDetections = useMemo(
+    () => allDetections.filter((item) => item.timestamp >= episode.start && item.timestamp <= episode.end),
+    [allDetections, episode],
+  );
+  const episodeEvidence = useMemo(() => uniqueEvidence(episodeDetections), [episodeDetections]);
 
   const pressureMin = extrema(rows.map((row) => row.pressure), "min");
   const flowMin = extrema(rows.map((row) => row.flow), "min");
@@ -234,17 +166,75 @@ export function ReidDashboard() {
   const residualMin = extrema(rows.map(airflowResidual), "min");
   const pressureStart = rows.find((row) => row.pressure !== null)?.pressure ?? null;
   const pressureDrop = pressureStart !== null && pressureMin !== null ? pressureStart - pressureMin : null;
-  const rattles = rows.filter((row) => row.sound === "rattle").length;
   const missing = rows.reduce(
     (total, row) =>
       total + [row.airflow, row.pressure, row.flow, row.temperature, row.vibration].filter((value) => value === null).length,
     0,
   );
 
-  const isFailure = episode.severity === "failure";
+  const isFailure = episode.kind === "water";
+  const failureAt = rows.find((row) => row.status === "failed")?.timestamp;
+  const firstWatchAt = episodeDetections.find((item) => item.level !== "safe")?.timestamp;
+  const leadHours = failureAt && firstWatchAt ? (failureAt.getTime() - firstWatchAt.getTime()) / 3_600_000 : null;
   const briefing = isFailure
     ? `Water pressure loses ${format(pressureDrop, 0)} kPa across the incident window while vibration rises to ${format(vibrationMax, 2)}. The same sequence appears before both recorded failures, providing a 24-hour preparation window.`
     : `Delivered airflow falls roughly ${format(Math.abs(residualMin ?? 0), 2)} m³/s below the healthy power relationship. Water remains comparatively stable, isolating this episode as ventilation inefficiency rather than system-wide failure.`;
+  const visibleAiBrief = aiIncidentId === episode.id ? aiBrief : null;
+  const visibleAiMode = aiIncidentId === episode.id ? aiMode : null;
+  const visibleAiProvider = aiIncidentId === episode.id ? aiProvider : null;
+  const visibleAiError = aiIncidentId === episode.id ? aiError : null;
+  const decision = decisions[episode.id] || null;
+
+  const briefingInput: BriefingRequest = {
+    incidentId: episode.id,
+    label: episode.label,
+    level: episode.level,
+    kind: episode.kind,
+    window: { start: episode.start.toISOString(), end: episode.end.toISOString() },
+    leadHours,
+    totalRows: rows.length,
+    missingValues: missing,
+    evidence: episodeEvidence,
+  };
+  const presentedAiBrief = visibleAiBrief ? presentIncidentBrief(visibleAiBrief, briefingInput) : null;
+
+  async function generateIncidentBrief() {
+    setAiIncidentId(episode.id);
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const response = await fetch("/api/briefing", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(briefingInput),
+      });
+      if (!response.ok) throw new Error("The briefing service rejected this evidence package.");
+      const payload = await response.json() as {
+        brief: IncidentBrief;
+        mode: "live" | "fallback";
+        provider: string;
+        error?: string;
+      };
+      setAiBrief(payload.brief);
+      setAiMode(payload.mode);
+      setAiProvider(payload.provider);
+      setAiError(payload.error || null);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "The live briefing could not be generated.");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function recordDecision(value: string) {
+    const record = `${value} · ${new Intl.DateTimeFormat("en-AU", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "Australia/Perth",
+    }).format(new Date())}`;
+    window.localStorage.setItem(`reid-decision:${episode.id}`, record);
+    setDecisions((current) => ({ ...current, [episode.id]: record }));
+  }
 
   return (
     <div className="app-shell">
@@ -288,7 +278,9 @@ export function ReidDashboard() {
                   onClick={() => setEpisodeId(item.id)}
                   type="button"
                 >
-                  <span className={`severity ${item.severity}`}>{item.severity}</span>
+                  <span className={`severity ${item.kind === "water" ? "failure" : "warning"}`}>
+                    {item.level}
+                  </span>
                   <strong>{item.label}</strong>
                   <span>{item.date} · {item.summary}</span>
                 </button>
@@ -351,54 +343,75 @@ export function ReidDashboard() {
                 <span className="eyebrow">Transparent detector</span>
                 <h2>Why this incident is flagged</h2>
                 <div className="evidence-list">
-                  <div className="evidence-row">
-                    <span className="evidence-dot" />
-                    <div>
-                      <strong>{isFailure ? "Water pressure deterioration" : "Airflow efficiency loss"}</strong>
-                      <p>{isFailure ? "Pressure declines before power and temperature show the full consequence." : "Power demand stays high while measured airflow breaks Cloudy's healthy relationship."}</p>
+                  {episodeEvidence.map((signal) => (
+                    <div className="evidence-row" key={signal.id}>
+                      <span className="evidence-dot" />
+                      <div>
+                        <strong>{signal.label}</strong>
+                        <p>{signal.explanation} <span className="note-citation">Cloudy note {signal.cloudyNote}</span></p>
+                      </div>
+                      <span className="evidence-value">{signal.value}</span>
                     </div>
-                    <span className="evidence-value">{isFailure ? `−${format(pressureDrop, 0)} kPa` : `${format(residualMin, 2)} m³/s`}</span>
-                  </div>
-                  <div className="evidence-row">
-                    <span className="evidence-dot" />
-                    <div>
-                      <strong>Mechanical stress</strong>
-                      <p>Vibration and listener observations provide a second, independent signal.</p>
-                    </div>
-                    <span className="evidence-value">{format(vibrationMax, 2)} peak</span>
-                  </div>
-                  <div className="evidence-row">
-                    <span className="evidence-dot" />
-                    <div>
-                      <strong>Listener corroboration</strong>
-                      <p>Rattles occur during critical and failed states in the supplied history.</p>
-                    </div>
-                    <span className="evidence-value">{rattles} rattles</span>
-                  </div>
-                  <div className="evidence-row">
-                    <span className="evidence-dot" />
-                    <div>
-                      <strong>Data completeness</strong>
-                      <p>Missing readings are surfaced instead of silently interpreted as safe.</p>
-                    </div>
-                    <span className="evidence-value">{missing} missing</span>
-                  </div>
+                  ))}
                 </div>
               </section>
 
               <section className="panel cloudy-panel">
-                <span className="eyebrow">Briefing contract · preview</span>
-                <h2>Cloudy&apos;s incident brief</h2>
-                <p className="briefing">“{briefing}”</p>
-                <div className="briefing-action">
-                  <strong>Recommended next action</strong>
-                  <p>{isFailure ? "Inspect the water valves, prepare manual supply, and notify vulnerable residents before temperature falls." : "Inspect ventilation fans and compare delivered airflow with expected output before changing power demand."}</p>
+                <div className="ai-heading">
+                  <span className="eyebrow">Evidence-grounded AI</span>
+                  <span className={`ai-mode ${visibleAiMode || "ready"}`}>{visibleAiMode === "live" ? "live LLM" : visibleAiMode || "ready"}</span>
                 </div>
-                <p className="contract-note">
-                  This first version uses a deterministic briefing fallback. The final LLM will receive only the validated evidence object and must cite the triggering signals.
-                </p>
+                <h2>Cloudy&apos;s incident brief</h2>
+                <p className="briefing">“{presentedAiBrief?.summary || briefing}”</p>
+                <div className="briefing-action">
+                  <strong>{presentedAiBrief?.headline || "Recommended next action"}</strong>
+                  {visibleAiBrief ? (
+                    <ol className="action-list">
+                      {visibleAiBrief.actions.map((action) => (
+                        <li key={`${action.priority}-${action.id}`}><span>{action.priority}</span>{ACTION_CATALOG[action.id]}</li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p>{isFailure ? "Inspect the water valves, prepare manual supply, and notify vulnerable residents before temperature falls." : "Inspect ventilation fans and compare delivered airflow with expected output before changing power demand."}</p>
+                  )}
+                </div>
+                {visibleAiBrief && <p className="uncertainty"><strong>Uncertainty:</strong> {presentedAiBrief?.uncertainty}</p>}
+                {visibleAiBrief && <p className="citation-line">Evidence cited: {visibleAiBrief.evidenceCitations.join(", ")}</p>}
+                <button className="generate-button" disabled={aiLoading} onClick={generateIncidentBrief} type="button">
+                  {aiLoading ? "Generating from validated evidence…" : visibleAiBrief ? "Regenerate live briefing" : "Generate live AI briefing"}
+                </button>
+                <p className="contract-note">{visibleAiProvider || "The model receives only validated evidence and must cite exact triggering signal IDs."}</p>
+                {visibleAiError && <p className="ai-error">{visibleAiError}</p>}
               </section>
             </div>
+
+            <section className="panel validation-panel">
+              <div>
+                <span className="eyebrow">Automated backtest · all 500 records</span>
+                <h2>Detector performance</h2>
+                <p>The detector never reads <code>system_status</code>. That supplied label is used only after detection to measure performance.</p>
+              </div>
+              <div className="validation-stats">
+                <div><strong>{backtest.detectedFailureEvents}/2</strong><span>failures found</span></div>
+                <div><strong>{Math.round(backtest.recall * 100)}%</strong><span>unsafe-hour recall</span></div>
+                <div><strong>{(backtest.failureLeadHours[0] || 0).toFixed(0)}h</strong><span>earliest watch</span></div>
+                <div><strong>{backtest.falsePositive}</strong><span>missing-data watches</span></div>
+              </div>
+            </section>
+
+            <section className="panel operator-panel">
+              <div>
+                <span className="eyebrow">Human decision checkpoint</span>
+                <h2>A coordinator remains in control</h2>
+                <p>AI recommendations do not change building systems. Record the next reversible response for the incident log.</p>
+              </div>
+              <div className="decision-actions" aria-label="Record response decision">
+                <button onClick={() => recordDecision("Inspect systems")} type="button">Inspect systems</button>
+                <button onClick={() => recordDecision("Prepare manual supply")} type="button">Prepare manual supply</button>
+                <button onClick={() => recordDecision("Notify vulnerable residents")} type="button">Notify residents</button>
+              </div>
+              <p className="decision-record">{decision ? `Recorded: ${decision}` : "No response recorded for this incident."}</p>
+            </section>
 
             <section className="method-strip" aria-label="Detection method">
               <div className="method-step"><span className="micro-label">01 · observe</span><strong>Validate the record</strong><p>Normalise timestamps and the salvaged sensor identity.</p></div>
@@ -409,7 +422,7 @@ export function ReidDashboard() {
 
             <footer className="footer-note">
               <span>Event dataset · 500 hourly records · 1–21 July 2026</span>
-              <span>Built for the dragons sheltering in Reid Library · Feathers of Ruin</span>
+              <span>Built by 4Freshers for the dragons sheltering in Reid Library</span>
             </footer>
           </div>
         </div>

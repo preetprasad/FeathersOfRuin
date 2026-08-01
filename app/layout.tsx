@@ -27,6 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description:
       "An evidence-first early warning console for the dragons sheltering in Reid Library.",
+    authors: [{ name: "4Freshers" }],
     openGraph: {
       title: "Reid Sentinel",
       description: "Failure had a shape. Now we can see it coming.",
