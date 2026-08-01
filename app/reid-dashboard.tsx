@@ -148,6 +148,21 @@ const metricGroups = {
   ],
 } as const;
 
+const metricViewCopy = {
+  water: {
+    title: "Water delivery",
+    description: "Pressure and flow reveal whether the shelter can maintain a usable water supply.",
+  },
+  ventilation: {
+    title: "Ventilation efficiency",
+    description: "Power demand is compared with delivered airflow to expose machinery that is running without moving enough air.",
+  },
+  shelter: {
+    title: "Shelter impact",
+    description: "Temperature, vibration, and listener observations show the human consequence and independent corroboration.",
+  },
+} as const;
+
 function compactDate(date: Date) {
   return new Intl.DateTimeFormat("en-AU", {
     day: "numeric",
@@ -698,11 +713,16 @@ export function ReidDashboard() {
 
   const pressureMin = extrema(rows.map((row) => row.pressure), "min");
   const flowMin = extrema(rows.map((row) => row.flow), "min");
+  const powerMax = extrema(rows.map((row) => row.power), "max");
+  const airflowMin = extrema(rows.map((row) => row.airflow), "min");
   const vibrationMax = extrema(rows.map((row) => row.vibration), "max");
   const temperatureMin = extrema(rows.map((row) => row.temperature), "min");
   const residualMin = extrema(rows.map(airflowResidual), "min");
   const pressureStart = rows.find((row) => row.pressure !== null)?.pressure ?? null;
   const pressureDrop = pressureStart !== null && pressureMin !== null ? pressureStart - pressureMin : null;
+  const temperatureStart = rows.find((row) => row.temperature !== null)?.temperature ?? null;
+  const temperatureDrop = temperatureStart !== null && temperatureMin !== null ? temperatureStart - temperatureMin : null;
+  const listenerEvents = rows.filter((row) => !["normal", "unknown", "none"].includes(row.sound.toLowerCase())).length;
   const missing = rows.reduce(
     (total, row) =>
       total + [row.airflow, row.pressure, row.flow, row.temperature, row.vibration].filter((value) => value === null).length,
@@ -710,6 +730,27 @@ export function ReidDashboard() {
   );
 
   const isFailure = episode.kind === "water";
+  const viewCopy = metricViewCopy[metricGroup];
+  const viewKpis = metricGroup === "water"
+    ? [
+        { label: "Lowest pressure", value: format(pressureMin, 0), unit: "kPa", detail: isFailure ? "Below the healthy ~350 kPa band" : "Water pressure remains near its healthy band" },
+        { label: "Lowest flow", value: format(flowMin, 2), unit: "L/s", detail: isFailure ? "Severe loss of delivered water" : "No material flow loss during this episode" },
+        { label: "Pressure lost", value: format(pressureDrop, 0), unit: "kPa", detail: "Change from the first available reading to the incident minimum" },
+        { label: "Peak vibration", value: format(vibrationMax, 2), unit: "", detail: "Independent machinery evidence; stable is typically near 0.15" },
+      ]
+    : metricGroup === "ventilation"
+      ? [
+          { label: "Lowest airflow", value: format(airflowMin, 2), unit: "m³/s", detail: "Minimum delivered airflow in the selected incident window" },
+          { label: "Worst efficiency gap", value: format(residualMin, 2), unit: "m³/s", detail: "Negative residual means less airflow than healthy power demand predicts" },
+          { label: "Highest power", value: format(powerMax, 1), unit: "kW", detail: "Demand alone is not treated as proof of useful ventilation" },
+          { label: "Peak vibration", value: format(vibrationMax, 2), unit: "", detail: "Corroborates mechanical stress independently of the efficiency model" },
+        ]
+      : [
+          { label: "Lowest temperature", value: format(temperatureMin, 1), unit: "°C", detail: "Temperature is consequence evidence that changes after earlier warning signals" },
+          { label: "Temperature fall", value: format(temperatureDrop, 1), unit: "°C", detail: "Change from the first available shelter reading to the incident minimum" },
+          { label: "Peak vibration", value: format(vibrationMax, 2), unit: "", detail: "Physical corroboration of machinery distress" },
+          { label: "Listener events", value: String(listenerEvents), unit: "reports", detail: "Subjective observations remain Watch evidence until sensors corroborate them" },
+        ];
   const failureAt = rows.find((row) => row.status === "failed")?.timestamp;
   const firstWatchAt = episodeDetections.find((item) => item.level !== "safe")?.timestamp;
   const leadHours = failureAt && firstWatchAt ? (failureAt.getTime() - firstWatchAt.getTime()) / 3_600_000 : null;
@@ -899,8 +940,9 @@ export function ReidDashboard() {
             <section className="panel">
               <div className="panel-heading">
                 <div>
-                  <h2>{episode.label}</h2>
-                  <p>{episode.date} · {rows.length} hourly readings · Australia/Perth</p>
+                  <span className="micro-label">{episode.label} · selected incident</span>
+                  <h2>{viewCopy.title}</h2>
+                  <p>{episode.date} · {rows.length} hourly readings · {viewCopy.description}</p>
                 </div>
                 <div className="metric-tabs" aria-label="Signal group">
                   {(["water", "ventilation", "shelter"] as MetricGroup[]).map((group) => (
@@ -919,26 +961,13 @@ export function ReidDashboard() {
               <SignalChart group={metricGroup} rows={rows} />
 
               <div className="kpi-grid">
-                <article className="kpi-card">
-                  <span className="micro-label">Lowest pressure</span>
-                  <strong>{format(pressureMin, 0)} <small>kPa</small></strong>
-                  <p>{isFailure ? "Below the healthy ~350 kPa band" : "Water system remains near baseline"}</p>
-                </article>
-                <article className="kpi-card">
-                  <span className="micro-label">Lowest flow</span>
-                  <strong>{format(flowMin, 2)} <small>L/s</small></strong>
-                  <p>{isFailure ? "Severe loss of delivered water" : "No material loss during this episode"}</p>
-                </article>
-                <article className="kpi-card">
-                  <span className="micro-label">Peak vibration</span>
-                  <strong>{format(vibrationMax, 2)}</strong>
-                  <p>Stable machinery typically sits near 0.15</p>
-                </article>
-                <article className="kpi-card">
-                  <span className="micro-label">Lowest temperature</span>
-                  <strong>{format(temperatureMin, 1)} <small>°C</small></strong>
-                  <p>Temperature confirms danger after earlier signals</p>
-                </article>
+                {viewKpis.map((item) => (
+                  <article className="kpi-card" key={item.label}>
+                    <span className="micro-label">{item.label}</span>
+                    <strong>{item.value} {item.unit && <small>{item.unit}</small>}</strong>
+                    <p>{item.detail}</p>
+                  </article>
+                ))}
               </div>
             </section>
 

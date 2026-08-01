@@ -89,6 +89,11 @@ test("keeps the evidence source and starter preview out of the finished product"
   assert.match(dashboard, /Unstable drift/);
   assert.match(dashboard, /Evidence used by this briefing/);
   assert.match(dashboard, /Structured briefing/);
+  assert.match(dashboard, /Water delivery/);
+  assert.match(dashboard, /Ventilation efficiency/);
+  assert.match(dashboard, /Shelter impact/);
+  assert.match(dashboard, /Worst efficiency gap/);
+  assert.match(dashboard, /Listener events/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton|drizzle/);
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });

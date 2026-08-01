@@ -64,6 +64,7 @@ This document is the durable record of the decisions, pivots, rationale, action 
 | Make the sensor trust gate fail closed at row-level edges | Safety evidence cannot tolerate a single missing interval, impossible value, duplicate timestamp, or frozen run being hidden by a high aggregate percentage | Coverage, cadence, completeness, and range must be exact; calibration requires at least 24 stable rows and corrected residual MAE no greater than `0.05 m³/s` |
 | Keep the selected failure-warning thread visually dominant | The live hackathon page says to choose one thread, while the salvaged sensor is a separate Reid thread | A cross-failure replay now proves the main warning result; the interactive sensor stress test is explicitly framed as an input-quality support layer |
 | Make AI grounding inspectable on screen | A citation count proves validation but does not help a judge inspect what the model actually used | Each accepted citation now resolves to the detector signal, label, and measured value and links back to its source row in the evidence panel |
+| Keep signal-view labels and summaries synchronized | Switching the graph to ventilation or shelter while retaining a water heading and water KPIs made the active view ambiguous | Water, ventilation, and shelter now change the heading, explanation, legend, and four contextual KPIs as one state |
 
 ### AI architecture
 
