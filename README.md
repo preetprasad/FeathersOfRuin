@@ -51,6 +51,7 @@ The Matilda Bay and Sunken Garden workspaces remain research references. They ar
 - [Live Reid Sentinel dashboard](https://reid-sentinel.vercel.app/)
 - [Protected Reid Sentinel presentation](https://reid-sentinel.vercel.app/presentation) — authenticated guided concepts, live analysis controls, calculated results, and exact source links
 - [Private 4Freshers admin den](https://reid-sentinel.vercel.app/admin) — authenticated contribution ledger, judge-path readiness, launch controls, and presenter runbook
+- [Five-minute Reid Sentinel presentation script](locations/reid-library/PRESENTATION_SCRIPT.md) — Preet's timed solo talk track, live-demo cues, and two-minute Q&A bank
 - [Reid Sentinel project record](locations/reid-library/PROJECT_RECORD.md) — decisions, pivots, milestones, risks, takeaways, and action plan
 - [Event datasets](https://drive.google.com/drive/folders/1PhiIBZ-ngRpJv91hGCu_9vg9zpwcYfbp?usp=sharing)
 

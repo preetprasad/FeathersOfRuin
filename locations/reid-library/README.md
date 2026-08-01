@@ -172,6 +172,8 @@ The complete judged workflow is implemented as the repository's main web applica
 
 **Private team admin:** [reid-sentinel.vercel.app/admin](https://reid-sentinel.vercel.app/admin)
 
+**Presenter runbook:** [Five-minute solo presentation and two-minute Q&A](PRESENTATION_SCRIPT.md)
+
 Current capabilities:
 
 - Provides an 11-section, keyboard-controlled presentation mode inside the same application, with interactive residual, corroboration, trust-gate, and threshold-profile demonstrations driven by the production analysis functions
