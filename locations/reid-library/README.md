@@ -178,8 +178,9 @@ Current capabilities:
 - Traces every detector signal to the relevant recovered Cloudy note
 - Backtests the detector over all 500 records and displays measured performance
 - Sends a schema-validated evidence object to a live LLM and requires structured, cited output
-- Uses a token-protected 4Freshers Ollama bridge in the current public demo, with Vercel AI Gateway available when account credits are unlocked
-- Falls back transparently to deterministic decision support if the model is unavailable
+- Uses a token-protected 4Freshers Ollama bridge as the primary model in the public demo
+- Fails over to Claude Haiku when Ollama is unavailable, then to validated deterministic decision support if every model is unavailable
+- Displays live primary, hosted-secondary, and guaranteed-fallback readiness in the dashboard
 - Lets a maintenance coordinator record a reversible response while keeping AI out of direct system control
 
 ### Measured detector result
@@ -221,11 +222,26 @@ The server sends only a bounded, schema-validated incident evidence object to th
 
 The endpoint rejects oversized or malformed requests, treats evidence strings as untrusted data, filters invented citation IDs, keeps credentials server-side, and never lets the model operate infrastructure directly.
 
-The current public demo uses `gemma3:4b` through a token-protected ngrok bridge because Vercel requires a payment card before unlocking its AI Gateway credit. The bridge exposes only the fixed briefing endpoint, caps concurrent requests, validates message size, fixes the local model and generation settings, and requires a secret stored only in local and Vercel environment configuration. Local development talks directly to Ollama. Vercel AI Gateway remains the automatic alternative when remote Ollama variables are absent and Gateway billing is available.
+The current public demo uses `gemma3:4b` through a token-protected ngrok bridge as its primary model. The bridge exposes only the fixed briefing endpoint, caps concurrent requests, validates message size, fixes the local model and generation settings, and requires a secret stored only in local and Vercel environment configuration. If both bounded Ollama attempts fail, the same validated evidence and output schema are sent to `claude-haiku-4-5`. Vercel AI Gateway remains an optional third model route when configured. If every live provider fails, the endpoint returns a cited deterministic brief.
+
+Provider order:
+
+```text
+Ollama primary → Claude hosted fallback → optional Vercel AI Gateway → deterministic safe mode
+```
+
+Local Claude configuration belongs only in the ignored `.env.local` file:
+
+```dotenv
+ANTHROPIC_API_KEY=replace_with_your_claude_key
+ANTHROPIC_MODEL=claude-haiku-4-5
+```
+
+Never paste the key into documentation, client code, screenshots, issues, commits, or chat. Production uses the same names as Vercel environment variables, with `ANTHROPIC_API_KEY` stored as a sensitive secret.
 
 ### Demo AI operations
 
-For the live AI button to work during judging, the Mac running Ollama must remain awake and connected. Keep these two existing processes running:
+For Ollama to remain the primary provider during judging, the Mac must remain awake and connected. Keep these two existing processes running:
 
 1. The token-protected proxy on local port `11435`.
 2. The ngrok tunnel forwarding to port `11435`.
@@ -245,7 +261,7 @@ In a second terminal:
 ngrok http 11435
 ```
 
-If ngrok assigns a different URL, replace the sensitive Vercel `OLLAMA_REMOTE_URL` production variable and redeploy. The token normally remains unchanged. `OLLAMA_REMOTE_TOKEN` must match `OLLAMA_PROXY_TOKEN` but must never be printed in documentation or application output.
+If ngrok assigns a different URL, replace the sensitive Vercel `OLLAMA_REMOTE_URL` production variable and redeploy. The token normally remains unchanged. `OLLAMA_REMOTE_TOKEN` must match `OLLAMA_PROXY_TOKEN` but must never be printed in documentation or application output. If the Mac or tunnel becomes unavailable, the application automatically uses Claude instead of blocking the briefing workflow.
 
 ### Verification
 
@@ -255,7 +271,7 @@ npm test
 npx next build
 ```
 
-The test suite covers incident discovery, lead time, false alarms, ground-truth isolation, server rendering, and presence of both live AI provider paths.
+The test suite covers incident discovery, lead time, false alarms, ground-truth isolation, server rendering, Ollama-to-Claude failover, provider-health reporting, malformed model output, retry recovery, invented citations, incident-inappropriate actions, prompt-injection boundaries, transport failure, deterministic fallback, malformed evidence, and request-size limits. The dashboard exposes provider readiness and the resulting trust contract with schema, citation, approved-action, and advisory-only indicators.
 
 ## Implementation warning
 

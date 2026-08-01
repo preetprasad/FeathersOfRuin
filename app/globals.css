@@ -586,6 +586,40 @@ button {
   color: var(--amber);
 }
 
+.topbar-status,
+.provider-health {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-status {
+  gap: 10px;
+}
+
+.provider-health {
+  gap: 7px;
+  color: var(--paper-muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+
+.provider-health > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--paper-muted);
+}
+
+.provider-health.available > span {
+  background: var(--mint);
+  box-shadow: 0 0 10px rgb(158 231 192 / 0.5);
+}
+
+.provider-health.unavailable > span {
+  background: var(--amber);
+}
+
 .action-list {
   display: grid;
   gap: 8px;
@@ -624,6 +658,28 @@ button {
 .citation-line {
   color: var(--blue);
   font-family: var(--font-geist-mono), monospace;
+}
+
+.ai-trust-strip {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-trust-strip li {
+  padding: 5px 7px;
+  border: 1px solid rgb(158 231 192 / 0.24);
+  border-radius: 999px;
+  background: rgb(158 231 192 / 0.06);
+  color: var(--mint);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.04em;
 }
 
 .ai-error {

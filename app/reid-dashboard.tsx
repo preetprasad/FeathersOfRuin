@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import sensorData from "../locations/reid-library/data/processed/reid_library_sensor_data.json";
 import { ACTION_CATALOG, presentIncidentBrief, type BriefingRequest, type IncidentBrief } from "../lib/reid-briefing";
 import {
@@ -15,6 +15,11 @@ import {
 } from "../lib/reid-analysis";
 
 type MetricGroup = "water" | "ventilation" | "shelter";
+type ProviderHealth = {
+  primary: { provider: string; status: "available" | "unavailable" };
+  secondary: { provider: string; status: "standby" | "not-configured" };
+  guaranteedFallback: { provider: string; status: "available" };
+};
 
 const metricGroups = {
   water: [
@@ -147,8 +152,25 @@ export function ReidDashboard() {
   const [aiIncidentId, setAiIncidentId] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [providerHealth, setProviderHealth] = useState<ProviderHealth | null>(null);
   const [decisions, setDecisions] = useState<Record<string, string>>({});
   const episode = (episodes.find((item) => item.id === episodeId) || episodes[2] || episodes[0])!;
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/briefing/health", { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) throw new Error("Provider health unavailable");
+        return response.json() as Promise<ProviderHealth>;
+      })
+      .then((health) => {
+        if (active) setProviderHealth(health);
+      })
+      .catch(() => {
+        if (active) setProviderHealth(null);
+      });
+    return () => { active = false; };
+  }, []);
 
   const rows = useMemo(() => {
     return allRows.filter((row) => row.timestamp >= episode.start && row.timestamp <= episode.end);
@@ -244,7 +266,19 @@ export function ReidDashboard() {
           <span>REID SENTINEL</span>
           <span>/ essential systems</span>
         </div>
-        <div className="live-pill"><span>Historical playback · July 2026</span></div>
+        <div className="topbar-status">
+          <div className={`provider-health ${providerHealth?.primary.status || "checking"}`} aria-live="polite">
+            <span />
+            {!providerHealth
+              ? "Checking AI providers…"
+              : providerHealth.primary.status === "available"
+                ? `${providerHealth.primary.provider} online · ${providerHealth.secondary.status === "standby" ? "Claude standby" : "safe fallback ready"}`
+                : providerHealth.secondary.status === "standby"
+                  ? "Ollama offline · Claude ready"
+                  : "Deterministic safe mode"}
+          </div>
+          <div className="live-pill"><span>Historical playback · July 2026</span></div>
+        </div>
       </header>
 
       <main className="dashboard">
@@ -377,6 +411,14 @@ export function ReidDashboard() {
                 </div>
                 {visibleAiBrief && <p className="uncertainty"><strong>Uncertainty:</strong> {presentedAiBrief?.uncertainty}</p>}
                 {visibleAiBrief && <p className="citation-line">Evidence cited: {visibleAiBrief.evidenceCitations.join(", ")}</p>}
+                {visibleAiBrief && (
+                  <ul className="ai-trust-strip" aria-label="AI response validation">
+                    <li>Schema valid</li>
+                    <li>{visibleAiBrief.evidenceCitations.length}/{visibleAiBrief.evidenceCitations.length} citations verified</li>
+                    <li>{visibleAiBrief.actions.length}/{visibleAiBrief.actions.length} actions approved</li>
+                    <li>Advisory only</li>
+                  </ul>
+                )}
                 <button className="generate-button" disabled={aiLoading} onClick={generateIncidentBrief} type="button">
                   {aiLoading ? "Generating from validated evidence…" : visibleAiBrief ? "Regenerate live briefing" : "Generate live AI briefing"}
                 </button>

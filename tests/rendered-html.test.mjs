@@ -53,9 +53,14 @@ test("keeps the evidence source and starter preview out of the finished product"
   assert.match(dashboard, /system_status/);
   assert.match(dashboard, /airflowResidual/);
   assert.match(dashboard, /Generate live AI briefing/);
+  assert.match(dashboard, /Schema valid/);
+  assert.match(dashboard, /citations verified/);
+  assert.match(dashboard, /actions approved/);
   assert.match(briefingRoute, /generateText/);
   assert.match(briefingRoute, /Vercel AI Gateway/);
   assert.match(briefingRoute, /Local Ollama/);
+  assert.match(briefingRoute, /Claude hosted fallback/);
+  assert.match(dashboard, /Checking AI providers/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton|drizzle/);
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });
